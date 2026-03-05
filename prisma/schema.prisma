@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Story {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  nodes       Node[]
+}
+
+model Character {
+  id              String   @id @default(uuid())
+  name            String
+  spriteImageUrl  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  nodes           Node[]
+}
+
+model Node {
+  id                 String   @id @default(uuid())
+  storyId            String
+  characterId        String?
+  text               String
+  backgroundImageUrl String?
+  audioUrl           String?
+  isStartNode        Boolean  @default(false)
+  isEndNode          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  story              Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  character          Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  choices            Choice[] @relation("NodeChoices")
+  incomingChoices    Choice[] @relation("ChoiceTarget")
+}
+
+model Choice {
+  id            String   @id @default(uuid())
+  nodeId        String    // The node this choice belongs to
+  targetNodeId  String?   // The node this choice leads to
+  text          String
+  scoreImpact   Int      @default(0) // Political alignment/score impact
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  node          Node     @relation("NodeChoices", fields: [nodeId], references: [id], onDelete: Cascade)
+  targetNode    Node?    @relation("ChoiceTarget", fields: [targetNodeId], references: [id], onDelete: SetNull)
+}
+
+model PlayerScore {
+  id        String   @id @default(uuid())
+  name      String
+  score     Int
+  createdAt DateTime @default(now())
+}
