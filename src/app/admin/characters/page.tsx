@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+/* eslint-disable @next/next/no-img-element */
+import { useState, useEffect, useCallback } from 'react';
 import { Character } from '@prisma/client';
 
 export default function CharactersAdmin() {
@@ -9,7 +10,7 @@ export default function CharactersAdmin() {
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
 
-    const fetchCharacters = async () => {
+    const fetchCharacters = useCallback(async () => {
         setLoading(true);
         const res = await fetch('/api/characters');
         if (res.ok) {
@@ -17,11 +18,12 @@ export default function CharactersAdmin() {
             setCharacters(data);
         }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
-        fetchCharacters();
-    }, []);
+        const timer = setTimeout(() => { fetchCharacters(); }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchCharacters]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

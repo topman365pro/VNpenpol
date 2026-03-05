@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Story } from '@prisma/client';
 
@@ -10,7 +10,7 @@ export default function StoriesAdmin() {
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
 
-    const fetchStories = async () => {
+    const fetchStories = useCallback(async () => {
         setLoading(true);
         const res = await fetch('/api/stories');
         if (res.ok) {
@@ -18,11 +18,12 @@ export default function StoriesAdmin() {
             setStories(data);
         }
         setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
-        fetchStories();
-    }, []);
+        const timer = setTimeout(() => { fetchStories(); }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchStories]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

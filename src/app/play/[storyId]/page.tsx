@@ -1,6 +1,7 @@
 'use client';
+/* eslint-disable @next/next/no-img-element */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface Character {
@@ -30,7 +31,6 @@ interface Node {
 
 export default function GamePage() {
     const params = useParams();
-    const router = useRouter();
     const storyId = params.storyId as string;
 
     const [nodes, setNodes] = useState<Node[]>([]);

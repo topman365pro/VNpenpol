@@ -16,7 +16,7 @@ export async function PUT(
             },
         });
         return NextResponse.json(story);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to update story' }, { status: 500 });
     }
 }
@@ -31,7 +31,8 @@ export async function DELETE(
             where: { id },
         });
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to delete story' }, { status: 500 });
     }
 }
+

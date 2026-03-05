@@ -10,7 +10,7 @@ export async function GET() {
             }
         });
         return NextResponse.json(stories);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch stories' }, { status: 500 });
     }
 }
@@ -25,7 +25,8 @@ export async function POST(request: Request) {
             },
         });
         return NextResponse.json(story, { status: 201 });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to create story' }, { status: 500 });
     }
 }
+

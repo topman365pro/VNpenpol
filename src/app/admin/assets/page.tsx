@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+/* eslint-disable @next/next/no-img-element */
+import { useState, useEffect, useCallback } from 'react';
 
 interface Asset {
     name: string;
@@ -14,14 +15,17 @@ export default function AssetsAdmin() {
     const [uploading, setUploading] = useState(false);
     const [copied, setCopied] = useState<string | null>(null);
 
-    const fetchAssets = async () => {
+    const fetchAssets = useCallback(async () => {
         setLoading(true);
         const res = await fetch('/api/assets');
         if (res.ok) setAssets(await res.json());
         setLoading(false);
-    };
+    }, []);
 
-    useEffect(() => { fetchAssets(); }, []);
+    useEffect(() => {
+        const timer = setTimeout(() => { fetchAssets(); }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchAssets]);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;

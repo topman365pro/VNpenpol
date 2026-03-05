@@ -8,7 +8,7 @@ export async function GET() {
             take: 50, // Top 50 scores
         });
         return NextResponse.json(scores);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
     }
 }
@@ -23,7 +23,8 @@ export async function POST(request: Request) {
             },
         });
         return NextResponse.json(scoreRecord, { status: 201 });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to submit score' }, { status: 500 });
     }
 }
+

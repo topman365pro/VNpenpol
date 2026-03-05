@@ -7,7 +7,7 @@ export async function GET() {
             orderBy: { createdAt: 'desc' },
         });
         return NextResponse.json(characters);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch characters' }, { status: 500 });
     }
 }
@@ -22,7 +22,8 @@ export async function POST(request: Request) {
             },
         });
         return NextResponse.json(character, { status: 201 });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to create character' }, { status: 500 });
     }
 }
+

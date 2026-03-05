@@ -16,7 +16,7 @@ export async function PUT(
             },
         });
         return NextResponse.json(character);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });
     }
 }
@@ -31,7 +31,8 @@ export async function DELETE(
             where: { id },
         });
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to delete character' }, { status: 500 });
     }
 }
+

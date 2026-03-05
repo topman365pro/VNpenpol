@@ -72,7 +72,10 @@ export default function NodesEditor() {
         setLoading(false);
     }, [storyId]);
 
-    useEffect(() => { fetchNodes(); }, [fetchNodes]);
+    useEffect(() => {
+        const timer = setTimeout(() => { fetchNodes(); }, 0);
+        return () => clearTimeout(timer);
+    }, [fetchNodes]);
 
     const resetNodeForm = () => {
         setEditingNodeId(null);

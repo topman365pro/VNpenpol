@@ -27,7 +27,7 @@ export async function GET() {
         }
 
         return NextResponse.json(files);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to list assets' }, { status: 500 });
     }
 }
@@ -41,7 +41,8 @@ export async function DELETE(request: Request) {
         const filePath = path.join(process.cwd(), 'public', 'uploads', name);
         await unlink(filePath);
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 });
     }
 }
+

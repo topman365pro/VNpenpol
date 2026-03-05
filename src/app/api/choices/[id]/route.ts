@@ -17,7 +17,7 @@ export async function PUT(
             },
         });
         return NextResponse.json(choice);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to update choice' }, { status: 500 });
     }
 }
@@ -32,7 +32,8 @@ export async function DELETE(
             where: { id },
         });
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to delete choice' }, { status: 500 });
     }
 }
+

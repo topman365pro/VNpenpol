@@ -20,7 +20,7 @@ export async function PUT(
             },
         });
         return NextResponse.json(node);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to update node' }, { status: 500 });
     }
 }
@@ -35,7 +35,8 @@ export async function DELETE(
             where: { id },
         });
         return NextResponse.json({ success: true });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to delete node' }, { status: 500 });
     }
 }
+

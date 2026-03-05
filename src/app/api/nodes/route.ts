@@ -15,7 +15,7 @@ export async function GET(request: Request) {
             orderBy: { createdAt: 'asc' },
         });
         return NextResponse.json(nodes);
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch nodes' }, { status: 500 });
     }
 }
@@ -35,7 +35,8 @@ export async function POST(request: Request) {
             },
         });
         return NextResponse.json(node, { status: 201 });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to create node' }, { status: 500 });
     }
 }
+
