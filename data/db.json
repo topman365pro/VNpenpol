@@ -1,0 +1,213 @@
+{
+  "stories": [
+    {
+      "id": "story-demo-merdeka",
+      "title": "The Debate at Merdeka Hall",
+      "description": "A short branching political drama about transit, public trust, and who pays for progress.",
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    }
+  ],
+  "characters": [
+    {
+      "id": "char-amira",
+      "name": "Amira Rahman",
+      "spriteImageUrl": "/demo/amira-portrait.svg",
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "char-bima",
+      "name": "Bima Hartono",
+      "spriteImageUrl": "/demo/bima-portrait.svg",
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node-opening",
+      "storyId": "story-demo-merdeka",
+      "characterId": null,
+      "text": "Rain presses against the glass roof of Merdeka Hall as students, journalists, and city workers fill the chamber. Tonight, your campaign will either earn trust or lose the room.",
+      "backgroundImageUrl": "/demo/hall-bg.svg",
+      "audioUrl": null,
+      "isStartNode": true,
+      "isEndNode": false,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "node-amira-pitch",
+      "storyId": "story-demo-merdeka",
+      "characterId": "char-amira",
+      "text": "Amira straightens a stack of notes. \"We can cut commute times in half with an electric tram loop, but only if we protect the neighborhoods it passes through.\"",
+      "backgroundImageUrl": "/demo/debate-bg.svg",
+      "audioUrl": null,
+      "isStartNode": false,
+      "isEndNode": false,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "node-bima-pushback",
+      "storyId": "story-demo-merdeka",
+      "characterId": "char-bima",
+      "text": "Bima leans into the microphone. \"People want relief now. Freeze fares, pause the construction, and stop asking working families to gamble on a promise.\"",
+      "backgroundImageUrl": "/demo/debate-bg.svg",
+      "audioUrl": null,
+      "isStartNode": false,
+      "isEndNode": false,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "node-community-route",
+      "storyId": "story-demo-merdeka",
+      "characterId": "char-amira",
+      "text": "You back a neighborhood-first plan: phased construction, rent protections near stations, and a citizen oversight board. The crowd softens. Several union leaders begin taking notes.",
+      "backgroundImageUrl": "/demo/community-bg.svg",
+      "audioUrl": null,
+      "isStartNode": false,
+      "isEndNode": false,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "node-populist-route",
+      "storyId": "story-demo-merdeka",
+      "characterId": "char-bima",
+      "text": "You endorse a fare freeze with no replacement funding. The applause is loud, but a transport analyst in the front row whispers that the buses will start failing within months.",
+      "backgroundImageUrl": "/demo/community-bg.svg",
+      "audioUrl": null,
+      "isStartNode": false,
+      "isEndNode": false,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "node-reform-ending",
+      "storyId": "story-demo-merdeka",
+      "characterId": null,
+      "text": "By midnight, the headline reads: \"Candidate Trades Speed for Trust, Wins the Room.\" The plan is slower, harder, and politically expensive, but people believe it belongs to them.",
+      "backgroundImageUrl": "/demo/night-bg.svg",
+      "audioUrl": null,
+      "isStartNode": false,
+      "isEndNode": true,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "node-collapse-ending",
+      "storyId": "story-demo-merdeka",
+      "characterId": null,
+      "text": "Three weeks later the temporary fare freeze collapses under debt pressure. Your rally clips still trend online, but riders are angrier than before and trust is harder to rebuild.",
+      "backgroundImageUrl": "/demo/night-bg.svg",
+      "audioUrl": null,
+      "isStartNode": false,
+      "isEndNode": true,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    }
+  ],
+  "choices": [
+    {
+      "id": "choice-opening-1",
+      "nodeId": "node-opening",
+      "targetNodeId": "node-amira-pitch",
+      "text": "Open with an ambitious infrastructure case.",
+      "scoreImpact": 1,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-opening-2",
+      "nodeId": "node-opening",
+      "targetNodeId": "node-bima-pushback",
+      "text": "Open with immediate cost-of-living relief.",
+      "scoreImpact": 0,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-amira-1",
+      "nodeId": "node-amira-pitch",
+      "targetNodeId": "node-community-route",
+      "text": "Promise rent protections and public oversight.",
+      "scoreImpact": 3,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-amira-2",
+      "nodeId": "node-amira-pitch",
+      "targetNodeId": "node-populist-route",
+      "text": "Cut corners and promise the tram will pay for itself.",
+      "scoreImpact": -2,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-bima-1",
+      "nodeId": "node-bima-pushback",
+      "targetNodeId": "node-community-route",
+      "text": "Shift to a funded compromise before the room turns.",
+      "scoreImpact": 2,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-bima-2",
+      "nodeId": "node-bima-pushback",
+      "targetNodeId": "node-populist-route",
+      "text": "Double down on a crowd-pleasing freeze.",
+      "scoreImpact": -3,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-community-1",
+      "nodeId": "node-community-route",
+      "targetNodeId": "node-reform-ending",
+      "text": "Invite civic groups to co-sign the plan.",
+      "scoreImpact": 2,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    },
+    {
+      "id": "choice-populist-1",
+      "nodeId": "node-populist-route",
+      "targetNodeId": "node-collapse-ending",
+      "text": "Run with the slogan and hope the numbers work later.",
+      "scoreImpact": -2,
+      "createdAt": "2026-03-06T01:36:45.573Z",
+      "updatedAt": "2026-03-06T01:36:45.573Z"
+    }
+  ],
+  "playerScores": [
+    {
+      "id": "62788773-9175-4c7e-8624-00ba91dc0987",
+      "name": "Codex Test",
+      "score": 7,
+      "createdAt": "2026-03-06T02:17:07.000Z"
+    },
+    {
+      "id": "2bae401a-cd5b-4e0a-9248-d81c6dcffd32",
+      "name": "Codex Test 2",
+      "score": 9,
+      "createdAt": "2026-03-06T02:18:02.631Z"
+    },
+    {
+      "id": "8000b134-2aba-4aab-adad-b302e3990922",
+      "name": "Anonymous Voter",
+      "score": 4,
+      "createdAt": "2026-03-06T03:19:37.904Z"
+    },
+    {
+      "id": "806ea874-39b1-43c6-b677-ba584cd401dc",
+      "name": "Agus Suryanto",
+      "score": 4,
+      "createdAt": "2026-03-06T04:33:34.514Z"
+    }
+  ]
+}
