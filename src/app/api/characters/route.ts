@@ -18,6 +18,7 @@ export async function POST(request: Request) {
         const character = await createCharacter({
             name: json.name,
             spriteImageUrl: json.spriteImageUrl || null,
+            sprites: Array.isArray(json.sprites) ? json.sprites : undefined,
         });
         return NextResponse.json(character, { status: 201 });
     } catch {

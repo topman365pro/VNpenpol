@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { deleteCharacter, updateCharacter } from '@/lib/data-store';
+import { deletePlayerScore, updatePlayerScore } from '@/lib/data-store';
+
+export const dynamic = 'force-dynamic';
 
 export async function PUT(
     request: Request,
@@ -8,14 +10,13 @@ export async function PUT(
     try {
         const id = (await params).id;
         const json = await request.json();
-        const character = await updateCharacter(id, {
+        const score = await updatePlayerScore(id, {
             name: json.name,
-            spriteImageUrl: json.spriteImageUrl || null,
-            sprites: Array.isArray(json.sprites) ? json.sprites : undefined,
+            score: json.score,
         });
-        return NextResponse.json(character);
+        return NextResponse.json(score);
     } catch {
-        return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update leaderboard entry' }, { status: 500 });
     }
 }
 
@@ -25,9 +26,9 @@ export async function DELETE(
 ) {
     try {
         const id = (await params).id;
-        await deleteCharacter(id);
+        await deletePlayerScore(id);
         return NextResponse.json({ success: true });
     } catch {
-        return NextResponse.json({ error: 'Failed to delete character' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to delete leaderboard entry' }, { status: 500 });
     }
 }

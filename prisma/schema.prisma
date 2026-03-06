@@ -20,31 +20,64 @@ model Story {
 }
 
 model Character {
-  id              String   @id @default(uuid())
-  name            String
-  spriteImageUrl  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  nodes           Node[]
+  id        String            @id @default(uuid())
+  name      String
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  sprites   CharacterSprite[]
+  nodes     Node[]
+}
+
+model CharacterSprite {
+  id          String   @id @default(uuid())
+  characterId String
+  label       String
+  imageUrl    String
+  isDefault   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  nodes       Node[]
+}
+
+model Background {
+  id        String   @id @default(uuid())
+  name      String
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  nodes     Node[]
+}
+
+model SiteSettings {
+  id           String @id @default("global")
+  publicLocale String @default("id")
 }
 
 model Node {
   id                 String   @id @default(uuid())
   storyId            String
   characterId        String?
+  characterSpriteId  String?
+  backgroundId       String?
+  editorDepth        Int      @default(0)
+  editorOrder        Int      @default(0)
   text               String
-  backgroundImageUrl String?
   audioUrl           String?
   isStartNode        Boolean  @default(false)
   isEndNode          Boolean  @default(false)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
-  story              Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  story              Story      @relation(fields: [storyId], references: [id], onDelete: Cascade)
   character          Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+  characterSprite    CharacterSprite? @relation(fields: [characterSpriteId], references: [id], onDelete: SetNull)
+  background         Background? @relation(fields: [backgroundId], references: [id], onDelete: SetNull)
 
-  choices            Choice[] @relation("NodeChoices")
-  incomingChoices    Choice[] @relation("ChoiceTarget")
+  choices            Choice[]   @relation("NodeChoices")
+  incomingChoices    Choice[]   @relation("ChoiceTarget")
 }
 
 model Choice {

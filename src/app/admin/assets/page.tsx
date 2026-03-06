@@ -1,131 +1,163 @@
 'use client';
-/* eslint-disable @next/next/no-img-element */
-import { useState, useEffect, useCallback } from 'react';
 
-interface Asset {
-    name: string;
-    url: string;
-    size: number;
-    modified: string;
-}
+/* eslint-disable @next/next/no-img-element */
+import { useMemo, useState } from 'react';
+import AssetUploadButton from '@/components/admin/AssetUploadButton';
+import { useAssetLibrary } from '@/components/admin/use-asset-library';
+import type { AssetKind } from '@/lib/asset-utils';
+import { formatAssetSize, isAudioAsset, isImageAsset, prettyUploadedAssetName } from '@/lib/asset-utils';
+
+type AssetFilter = 'all' | AssetKind;
+
+const filterOptions: Array<{ value: AssetFilter; label: string }> = [
+    { value: 'all', label: 'All assets' },
+    { value: 'image', label: 'Images' },
+    { value: 'audio', label: 'Audio' },
+];
 
 export default function AssetsAdmin() {
-    const [assets, setAssets] = useState<Asset[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
+    const [filter, setFilter] = useState<AssetFilter>('all');
     const [copied, setCopied] = useState<string | null>(null);
+    const assetLibrary = useAssetLibrary(filter === 'all' ? undefined : filter);
 
-    const fetchAssets = useCallback(async () => {
-        setLoading(true);
-        const res = await fetch('/api/assets');
-        if (res.ok) setAssets(await res.json());
-        setLoading(false);
-    }, []);
+    const imageCount = useMemo(
+        () => assetLibrary.assets.filter((asset) => isImageAsset(asset.name)).length,
+        [assetLibrary.assets]
+    );
+    const audioCount = useMemo(
+        () => assetLibrary.assets.filter((asset) => isAudioAsset(asset.name)).length,
+        [assetLibrary.assets]
+    );
 
-    useEffect(() => {
-        const timer = setTimeout(() => { fetchAssets(); }, 0);
-        return () => clearTimeout(timer);
-    }, [fetchAssets]);
-
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
-
-        setUploading(true);
-        for (const file of Array.from(files)) {
-            const formData = new FormData();
-            formData.append('file', file);
-            await fetch('/api/upload', { method: 'POST', body: formData });
+    async function handleDelete(name: string) {
+        if (!confirm(`Delete ${prettyUploadedAssetName(name)}?`)) {
+            return;
         }
-        setUploading(false);
-        fetchAssets();
-        e.target.value = '';
-    };
 
-    const handleDelete = async (name: string) => {
-        if (!confirm(`Delete ${name}?`)) return;
-        const res = await fetch('/api/assets', {
+        const response = await fetch('/api/assets', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name }),
         });
-        if (res.ok) fetchAssets();
-    };
 
-    const copyUrl = (url: string) => {
-        navigator.clipboard.writeText(url);
+        if (response.ok) {
+            await assetLibrary.refreshAssets();
+        }
+    }
+
+    async function handleCopy(url: string) {
+        await navigator.clipboard.writeText(url);
         setCopied(url);
         setTimeout(() => setCopied(null), 2000);
-    };
-
-    const formatSize = (bytes: number) => {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    };
-
-    const isImage = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
-    const isAudio = (name: string) => /\.(mp3|wav|ogg|m4a)$/i.test(name);
+    }
 
     return (
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <h1 className="text-gradient" style={{ fontSize: '2rem' }}>Asset Manager</h1>
-                <label className="btn btn-primary" style={{ cursor: 'pointer' }}>
-                    {uploading ? '⏳ Uploading...' : '📤 Upload Files'}
-                    <input type="file" multiple onChange={handleUpload} style={{ display: 'none' }} accept="image/*,audio/*" />
-                </label>
+                <div>
+                    <h1 className="text-gradient" style={{ fontSize: '2rem', marginBottom: '0.3rem' }}>Asset Library</h1>
+                    <p style={{ color: 'var(--text-muted)' }}>
+                        Canonical upload browser for images and audio used by sprites, backgrounds, and node soundtracks.
+                    </p>
+                </div>
+                <AssetUploadButton
+                    label="Upload Files"
+                    loadingLabel="Uploading..."
+                    uploading={assetLibrary.uploading}
+                    accept="image/*,audio/*"
+                    multiple
+                    onFilesSelected={assetLibrary.uploadFiles}
+                />
             </div>
 
-            {loading ? (
-                <div className="animate-pulse" style={{ height: '200px', background: 'var(--glass-border)', borderRadius: '8px' }} />
-            ) : assets.length === 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.9rem', marginBottom: '1.5rem' }}>
+                <div className="glass-panel" style={{ padding: '1rem 1.2rem' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Showing</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 800 }}>{assetLibrary.assets.length}</p>
+                </div>
+                <div className="glass-panel" style={{ padding: '1rem 1.2rem' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Images</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 800 }}>{filter === 'audio' ? 0 : imageCount}</p>
+                </div>
+                <div className="glass-panel" style={{ padding: '1rem 1.2rem' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Audio</p>
+                    <p style={{ fontSize: '1.9rem', fontWeight: 800 }}>{filter === 'image' ? 0 : audioCount}</p>
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+                {filterOptions.map((option) => (
+                    <button
+                        key={option.value}
+                        type="button"
+                        className={filter === option.value ? 'btn btn-primary' : 'btn btn-secondary'}
+                        onClick={() => setFilter(option.value)}
+                        style={{ padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}
+                    >
+                        {option.label}
+                    </button>
+                ))}
+            </div>
+
+            {assetLibrary.loading ? (
+                <div className="animate-pulse" style={{ height: '240px', background: 'var(--glass-border)', borderRadius: '12px' }} />
+            ) : assetLibrary.assets.length === 0 ? (
                 <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center' }}>
                     <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>📁</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>No assets uploaded yet.</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Upload images and audio to use in your stories.</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem' }}>
+                        No {filter === 'all' ? '' : `${filter} `}assets uploaded yet.
+                    </p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
-                    {assets.map(asset => (
-                        <div key={asset.name} className="glass-panel" style={{ padding: '1rem', display: 'flex', flexDirection: 'column' }}>
-                            {/* Preview */}
-                            <div style={{
-                                height: '140px', borderRadius: 'var(--radius-sm)', marginBottom: '0.75rem',
-                                background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                overflow: 'hidden',
-                            }}>
-                                {isImage(asset.name) ? (
-                                    <img src={asset.url} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : isAudio(asset.name) ? (
-                                    <div style={{ textAlign: 'center', padding: '1rem' }}>
-                                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎵</div>
-                                        <audio controls src={asset.url} style={{ width: '100%', maxWidth: '180px' }} />
-                                    </div>
-                                ) : (
-                                    <span style={{ fontSize: '3rem' }}>📄</span>
-                                )}
-                            </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
+                    {assetLibrary.assets.map((asset) => {
+                        const isImage = isImageAsset(asset.name);
+                        const isAudio = isAudioAsset(asset.name);
+                        return (
+                            <div key={asset.name} className="glass-panel" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                <div style={{
+                                    height: '154px',
+                                    borderRadius: '16px',
+                                    background: 'rgba(0,0,0,0.28)',
+                                    overflow: 'hidden',
+                                    display: 'grid',
+                                    placeItems: 'center',
+                                }}>
+                                    {isImage ? (
+                                        <img src={asset.url} alt={asset.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : isAudio ? (
+                                        <div style={{ width: '100%', padding: '1rem' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '0.8rem', textAlign: 'center' }}>Audio preview</p>
+                                            <audio controls src={asset.url} style={{ width: '100%' }} />
+                                        </div>
+                                    ) : (
+                                        <span style={{ color: 'var(--text-muted)' }}>File</span>
+                                    )}
+                                </div>
 
-                            {/* Info */}
-                            <p style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.25rem', wordBreak: 'break-all', lineHeight: 1.3 }}>
-                                {asset.name.replace(/^\d+_/, '')}
-                            </p>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
-                                {formatSize(asset.size)}
-                            </p>
+                                <div style={{ minWidth: 0 }}>
+                                    <p style={{ fontSize: '0.9rem', fontWeight: 600, wordBreak: 'break-word' }}>
+                                        {prettyUploadedAssetName(asset.name)}
+                                    </p>
+                                    <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                        {formatAssetSize(asset.size)}
+                                    </p>
+                                    <p style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '0.25rem', wordBreak: 'break-all' }}>
+                                        {asset.url}
+                                    </p>
+                                </div>
 
-                            {/* Actions */}
-                            <div style={{ display: 'flex', gap: '0.4rem', marginTop: 'auto' }}>
-                                <button onClick={() => copyUrl(asset.url)} className="btn btn-secondary" style={{ flex: 1, padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>
-                                    {copied === asset.url ? '✅ Copied!' : '📋 Copy URL'}
-                                </button>
-                                <button onClick={() => handleDelete(asset.name)} className="btn btn-danger" style={{ padding: '0.3rem 0.5rem', fontSize: '0.75rem' }}>
-                                    🗑️
-                                </button>
+                                <div style={{ display: 'flex', gap: '0.45rem', marginTop: 'auto' }}>
+                                    <button type="button" className="btn btn-secondary" onClick={() => handleCopy(asset.url)} style={{ flex: 1, padding: '0.35rem 0.7rem', fontSize: '0.78rem' }}>
+                                        {copied === asset.url ? 'Copied' : 'Copy URL'}
+                                    </button>
+                                    <button type="button" className="btn btn-danger" onClick={() => handleDelete(asset.name)} style={{ padding: '0.35rem 0.7rem', fontSize: '0.78rem' }}>
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </div>

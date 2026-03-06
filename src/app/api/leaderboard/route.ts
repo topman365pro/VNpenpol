@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createPlayerScore, listLeaderboard } from '@/lib/data-store';
+import { createPlayerScore, getSiteSettings, listLeaderboard } from '@/lib/data-store';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +15,10 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const json = await request.json();
+        const settings = await getSiteSettings();
+        const fallbackName = settings.publicLocale === 'id' ? 'Pemilih Anonim' : 'Anonymous Voter';
         const scoreRecord = await createPlayerScore({
-            name: json.name || 'Anonymous Voter',
+            name: json.name || fallbackName,
             score: json.score || 0,
         });
         return NextResponse.json(scoreRecord, { status: 201 });

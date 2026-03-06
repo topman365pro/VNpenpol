@@ -1,94 +1,190 @@
 'use client';
+
 /* eslint-disable @next/next/no-img-element */
-import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import { useCallback, useEffect, useState } from 'react';
+import ImageAssetField from '@/components/admin/ImageAssetField';
+import { useAssetLibrary } from '@/components/admin/use-asset-library';
+
+interface CharacterSprite {
+    id: string;
+    label: string;
+    imageUrl: string;
+    isDefault: boolean;
+    sortOrder: number;
+}
 
 interface CharacterRecord {
     id: string;
     name: string;
-    spriteImageUrl: string | null;
+    sprites: CharacterSprite[];
+    defaultSprite: CharacterSprite | null;
+}
+
+interface SpriteDraft {
+    localId: string;
+    id?: string;
+    label: string;
+    imageUrl: string;
+    isDefault: boolean;
+}
+
+function makeSpriteDraft(overrides?: Partial<SpriteDraft>): SpriteDraft {
+    return {
+        localId: crypto.randomUUID(),
+        label: '',
+        imageUrl: '',
+        isDefault: false,
+        ...overrides,
+    };
+}
+
+function normalizeDraftDefaults(drafts: SpriteDraft[]) {
+    if (drafts.length === 0) {
+        return drafts;
+    }
+
+    const defaultIndex = drafts.findIndex((sprite) => sprite.isDefault);
+    const nextDefaultIndex = defaultIndex >= 0 ? defaultIndex : 0;
+    return drafts.map((sprite, index) => ({
+        ...sprite,
+        isDefault: index === nextDefaultIndex,
+    }));
 }
 
 export default function CharactersAdmin() {
     const [characters, setCharacters] = useState<CharacterRecord[]>([]);
     const [name, setName] = useState('');
-    const [spriteImageUrl, setSpriteImageUrl] = useState('');
+    const [sprites, setSprites] = useState<SpriteDraft[]>([makeSpriteDraft({ label: 'Default', isDefault: true })]);
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const imageAssets = useAssetLibrary('image');
 
     const fetchCharacters = useCallback(async () => {
         setLoading(true);
-        const res = await fetch('/api/characters');
-        if (res.ok) {
-            const data = await res.json();
-            setCharacters(data);
+        const response = await fetch('/api/characters');
+        if (response.ok) {
+            setCharacters(await response.json());
         }
         setLoading(false);
     }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => { fetchCharacters(); }, 0);
+        const timer = setTimeout(() => {
+            fetchCharacters();
+        }, 0);
         return () => clearTimeout(timer);
     }, [fetchCharacters]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!name) return;
+    function resetForm() {
+        setEditingId(null);
+        setName('');
+        setSprites([makeSpriteDraft({ label: 'Default', isDefault: true })]);
+    }
 
-        if (editingId) {
-            const res = await fetch(`/api/characters/${editingId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, spriteImageUrl }),
-            });
-            if (res.ok) {
-                setEditingId(null);
-                setName('');
-                setSpriteImageUrl('');
-                fetchCharacters();
-            }
-        } else {
-            const res = await fetch('/api/characters', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, spriteImageUrl }),
+    function setSpriteField(localId: string, field: keyof Omit<SpriteDraft, 'localId' | 'id'>, value: string | boolean) {
+        setSprites((current) => {
+            const next = current.map((sprite) => {
+                if (sprite.localId !== localId) {
+                    return sprite;
+                }
+
+                if (field === 'isDefault') {
+                    return {
+                        ...sprite,
+                        isDefault: Boolean(value),
+                    };
+                }
+
+                return {
+                    ...sprite,
+                    [field]: String(value),
+                };
             });
 
-            if (res.ok) {
-                setName('');
-                setSpriteImageUrl('');
-                fetchCharacters();
-            }
+            return field === 'isDefault' && Boolean(value)
+                ? next.map((sprite) => ({ ...sprite, isDefault: sprite.localId === localId }))
+                : next;
+        });
+    }
+
+    function addSprite() {
+        setSprites((current) => normalizeDraftDefaults([
+            ...current,
+            makeSpriteDraft({ label: `Expression ${current.length + 1}` }),
+        ]));
+    }
+
+    function removeSprite(localId: string) {
+        setSprites((current) => normalizeDraftDefaults(current.filter((sprite) => sprite.localId !== localId)));
+    }
+
+    async function handleSubmit(event: React.FormEvent) {
+        event.preventDefault();
+        if (!name.trim()) {
+            return;
         }
-    };
 
-    const handleEdit = (char: CharacterRecord) => {
-        setEditingId(char.id);
-        setName(char.name);
-        setSpriteImageUrl(char.spriteImageUrl || '');
+        const payload = {
+            name,
+            sprites: sprites.map((sprite, index) => ({
+                id: sprite.id,
+                label: sprite.label,
+                imageUrl: sprite.imageUrl,
+                isDefault: sprite.isDefault,
+                sortOrder: index,
+            })),
+        };
+
+        const response = await fetch(editingId ? `/api/characters/${editingId}` : '/api/characters', {
+            method: editingId ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+            resetForm();
+            fetchCharacters();
+        }
+    }
+
+    function handleEdit(character: CharacterRecord) {
+        setEditingId(character.id);
+        setName(character.name);
+        setSprites(normalizeDraftDefaults(character.sprites.map((sprite) => makeSpriteDraft({
+            id: sprite.id,
+            label: sprite.label,
+            imageUrl: sprite.imageUrl,
+            isDefault: sprite.isDefault,
+        }))));
         window.scrollTo(0, 0);
-    };
+    }
 
-    const handleDelete = async (id: string, e: React.MouseEvent) => {
-        e.preventDefault();
-        if (!confirm('Are you sure you want to delete this character?')) return;
-        const res = await fetch(`/api/characters/${id}`, { method: 'DELETE' });
-        if (res.ok) {
+    async function handleDelete(id: string, event: React.MouseEvent) {
+        event.preventDefault();
+        if (!confirm('Are you sure you want to delete this character?')) {
+            return;
+        }
+
+        const response = await fetch(`/api/characters/${id}`, { method: 'DELETE' });
+        if (response.ok) {
             if (editingId === id) {
-                setEditingId(null);
-                setName('');
-                setSpriteImageUrl('');
+                resetForm();
             }
             fetchCharacters();
         }
-    };
+    }
 
     return (
         <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', gap: '1rem', flexWrap: 'wrap' }}>
                 <h1 className="text-gradient" style={{ fontSize: '2rem' }}>Characters</h1>
+                <Link href="/admin/assets" className="btn btn-secondary">
+                    Open Asset Library
+                </Link>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(360px, 1fr) 1.7fr', gap: '2rem' }}>
                 <div className="glass-panel" style={{ padding: '2rem', height: 'fit-content' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>{editingId ? 'Edit Character' : 'Create New Character'}</h3>
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -97,28 +193,92 @@ export default function CharactersAdmin() {
                             <input
                                 type="text"
                                 value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                onChange={(event) => setName(event.target.value)}
                                 style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
                                 required
                             />
                         </div>
-                        <div>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Sprite Image URL (Optional)</label>
-                            <input
-                                type="text"
-                                value={spriteImageUrl}
-                                onChange={(e) => setSpriteImageUrl(e.target.value)}
-                                placeholder="/characters/senator-smith.png"
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
-                            />
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                For local files, place them in the <code>public</code> directory and start URL with <code>/</code>
-                            </p>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                            <div>
+                                <label style={{ marginBottom: '0.2rem' }}>Sprite Variants</label>
+                                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                    Upload or browse image assets for each expression.
+                                </p>
+                            </div>
+                            <button type="button" className="btn btn-secondary" onClick={addSprite} style={{ padding: '0.45rem 0.85rem' }}>
+                                Add Sprite
+                            </button>
                         </div>
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{editingId ? 'Update Character' : 'Add Character'}</button>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                            {sprites.map((sprite, index) => (
+                                <div
+                                    key={sprite.localId}
+                                    style={{
+                                        padding: '1rem',
+                                        borderRadius: '14px',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '0.75rem',
+                                    }}
+                                >
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: '0.75rem', alignItems: 'end' }}>
+                                        <div>
+                                            <label style={{ marginBottom: '0.35rem' }}>Label</label>
+                                            <input
+                                                type="text"
+                                                value={sprite.label}
+                                                onChange={(event) => setSpriteField(sprite.localId, 'label', event.target.value)}
+                                                placeholder={`Expression ${index + 1}`}
+                                            />
+                                        </div>
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', marginBottom: 0 }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={sprite.isDefault}
+                                                onChange={(event) => setSpriteField(sprite.localId, 'isDefault', event.target.checked)}
+                                            />
+                                            Default
+                                        </label>
+                                    </div>
+
+                                    <ImageAssetField
+                                        label="Sprite Image"
+                                        value={sprite.imageUrl}
+                                        onChange={(value) => setSpriteField(sprite.localId, 'imageUrl', value)}
+                                        assets={imageAssets.assets}
+                                        uploading={imageAssets.uploading}
+                                        uploadFiles={imageAssets.uploadFiles}
+                                        manageHref="/admin/assets"
+                                        helpText="Upload a portrait or choose from the existing image library."
+                                    />
+
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            Variant {index + 1} of {Math.max(sprites.length, 1)}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger"
+                                            onClick={() => removeSprite(sprite.localId)}
+                                            style={{ padding: '0.35rem 0.7rem', fontSize: '0.78rem' }}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                            <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                                {editingId ? 'Update Character' : 'Add Character'}
+                            </button>
                             {editingId && (
-                                <button type="button" onClick={() => { setEditingId(null); setName(''); setSpriteImageUrl(''); }} className="btn btn-secondary" style={{ flex: 1 }}>
+                                <button type="button" onClick={resetForm} className="btn btn-secondary" style={{ flex: 1 }}>
                                     Cancel
                                 </button>
                             )}
@@ -128,36 +288,58 @@ export default function CharactersAdmin() {
 
                 <div>
                     {loading ? (
-                        <div className="animate-pulse" style={{ height: '100px', background: 'var(--glass-border)', borderRadius: '8px' }}></div>
+                        <div className="animate-pulse" style={{ height: '100px', background: 'var(--glass-border)', borderRadius: '8px' }} />
                     ) : characters.length === 0 ? (
                         <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
                             <p style={{ color: 'var(--text-muted)' }}>No characters defined yet.</p>
                         </div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                            {characters.map(char => (
-                                <div key={char.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                                    <div style={{
-                                        width: '80px',
-                                        height: '80px',
-                                        borderRadius: '50%',
-                                        background: 'var(--glass-border)',
-                                        marginBottom: '1rem',
-                                        overflow: 'hidden',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                    }}>
-                                        {char.spriteImageUrl ? (
-                                            <img src={char.spriteImageUrl} alt={char.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>?</span>
-                                        )}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                            {characters.map((character) => (
+                                <div key={character.id} className="glass-panel" style={{ padding: '1.35rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', gap: '1rem', alignItems: 'start' }}>
+                                        <div style={{
+                                            width: '96px',
+                                            height: '128px',
+                                            borderRadius: '14px',
+                                            background: 'var(--glass-border)',
+                                            overflow: 'hidden',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}>
+                                            {character.defaultSprite ? (
+                                                <img src={character.defaultSprite.imageUrl} alt={character.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            ) : (
+                                                <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>?</span>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <h3 style={{ marginBottom: '0.35rem', fontSize: '1.1rem' }}>{character.name}</h3>
+                                            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+                                                {character.sprites.length} sprite variant{character.sprites.length === 1 ? '' : 's'}
+                                            </p>
+                                            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                                {character.sprites.map((sprite) => (
+                                                    <span key={sprite.id} className={`badge ${sprite.isDefault ? 'badge-success' : 'badge-secondary'}`}>
+                                                        {sprite.label}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>{char.name}</h3>
-                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                                        <button onClick={() => handleEdit(char)} className="btn btn-secondary" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}>Edit</button>
-                                        <button onClick={(e) => handleDelete(char.id, e)} className="btn btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', background: 'rgba(255, 50, 50, 0.2)', border: '1px solid rgba(255, 50, 50, 0.5)', color: '#ff6b6b' }}>Delete</button>
+
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                                        <button onClick={() => handleEdit(character)} className="btn btn-secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.82rem', flex: 1 }}>
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={(event) => handleDelete(character.id, event)}
+                                            className="btn btn-danger"
+                                            style={{ padding: '0.35rem 0.7rem', fontSize: '0.82rem', flex: 1 }}
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             ))}

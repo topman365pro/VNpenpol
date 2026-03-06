@@ -1,6 +1,6 @@
-'use client';
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { getSiteSettings, listLeaderboard } from '@/lib/data-store';
+import { formatPublicDate, getPublicCopy } from '@/lib/public-copy';
 
 interface ScoreEntry {
     id: string;
@@ -9,17 +9,12 @@ interface ScoreEntry {
     createdAt: string;
 }
 
-export default function LeaderboardPage() {
-    const [scores, setScores] = useState<ScoreEntry[]>([]);
-    const [loading, setLoading] = useState(true);
+export const dynamic = 'force-dynamic';
 
-    useEffect(() => {
-        (async () => {
-            const res = await fetch('/api/leaderboard');
-            if (res.ok) setScores(await res.json());
-            setLoading(false);
-        })();
-    }, []);
+export default async function LeaderboardPage() {
+    const { publicLocale } = await getSiteSettings();
+    const copy = getPublicCopy(publicLocale);
+    const scores = await listLeaderboard() as ScoreEntry[];
 
     const getMedal = (index: number) => {
         if (index === 0) return '🥇';
@@ -28,47 +23,38 @@ export default function LeaderboardPage() {
         return `#${index + 1}`;
     };
 
-    const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleDateString('en-US', {
-            month: 'short', day: 'numeric', year: 'numeric',
-        });
-    };
-
     return (
         <div style={{ minHeight: '100vh', padding: '3rem 2rem' }}>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                    <Link href="/" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>← Home</Link>
+                    <Link href="/" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{copy.leaderboard.backHome}</Link>
                     <h1 className="text-gradient" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginTop: '1rem' }}>
-                        🏆 Leaderboard
+                        🏆 {copy.leaderboard.heading}
                     </h1>
+                    <p style={{ color: 'var(--accent)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: '0.75rem' }}>
+                        PILAR · {copy.brand.expansion}
+                    </p>
                     <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '0.5rem' }}>
-                        Top political minds ranked by score.
+                        {copy.leaderboard.subheading}
                     </p>
                 </div>
 
-                {loading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        {[1, 2, 3, 4, 5].map(i => (
-                            <div key={i} className="animate-pulse" style={{ height: '60px', background: 'var(--glass-border)', borderRadius: '10px' }} />
-                        ))}
-                    </div>
-                ) : scores.length === 0 ? (
+                {scores.length === 0 ? (
                     <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center' }}>
                         <p style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏆</p>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>No scores submitted yet.</p>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Be the first to play and top the leaderboard!</p>
-                        <Link href="/play" className="btn btn-primary" style={{ marginTop: '1.5rem' }}>Play Now</Link>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>{copy.leaderboard.emptyTitle}</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>{copy.leaderboard.emptyDescription}</p>
+                        <Link href="/play" className="btn btn-primary" style={{ marginTop: '1.5rem' }}>{copy.leaderboard.playNow}</Link>
                     </div>
                 ) : (
                     <div className="glass-panel" style={{ overflow: 'hidden' }}>
                         <table>
                             <thead>
                                 <tr>
-                                    <th style={{ width: '60px', textAlign: 'center' }}>Rank</th>
-                                    <th>Player</th>
-                                    <th style={{ textAlign: 'right' }}>Score</th>
-                                    <th style={{ textAlign: 'right' }}>Date</th>
+                                    <th style={{ width: '60px', textAlign: 'center' }}>{copy.leaderboard.rank}</th>
+                                    <th>{copy.leaderboard.player}</th>
+                                    <th style={{ textAlign: 'right' }}>{copy.leaderboard.score}</th>
+                                    <th style={{ textAlign: 'right' }}>{copy.leaderboard.date}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -96,7 +82,7 @@ export default function LeaderboardPage() {
                                             {entry.score > 0 ? '+' : ''}{entry.score}
                                         </td>
                                         <td style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                            {formatDate(entry.createdAt)}
+                                            {formatPublicDate(entry.createdAt, publicLocale)}
                                         </td>
                                     </tr>
                                 ))}
@@ -106,7 +92,7 @@ export default function LeaderboardPage() {
                 )}
 
                 <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                    <Link href="/play" className="btn btn-primary">Play a Story</Link>
+                    <Link href="/play" className="btn btn-primary">{copy.leaderboard.playStory}</Link>
                 </div>
             </div>
         </div>

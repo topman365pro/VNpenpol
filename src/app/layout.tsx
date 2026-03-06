@@ -1,19 +1,30 @@
-import './globals.css'
-import type { Metadata } from 'next'
+import './globals.css';
+import type { Metadata } from 'next';
+import { getSiteSettings } from '@/lib/data-store';
+import { getPublicCopy } from '@/lib/public-copy';
 
-export const metadata: Metadata = {
-    title: 'Political Crossroads',
-    description: 'An interactive visual novel for political education',
+export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const { publicLocale } = await getSiteSettings();
+    const copy = getPublicCopy(publicLocale);
+
+    return {
+        title: copy.metadata.title,
+        description: copy.metadata.description,
+    };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: {
-    children: React.ReactNode
+    children: React.ReactNode;
 }) {
+    const { publicLocale } = await getSiteSettings();
+
     return (
-        <html lang="en">
+        <html lang={publicLocale}>
             <body>{children}</body>
         </html>
-    )
+    );
 }

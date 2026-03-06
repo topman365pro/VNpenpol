@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteNode, updateNode } from '@/lib/data-store';
+import { deleteNode, updateNode, updateNodeLayout } from '@/lib/data-store';
 
 export async function PUT(
     request: Request,
@@ -10,6 +10,10 @@ export async function PUT(
         const json = await request.json();
         const node = await updateNode(id, {
             characterId: json.characterId || null,
+            characterSpriteId: json.characterSpriteId || null,
+            backgroundId: json.backgroundId || null,
+            editorDepth: typeof json.editorDepth === 'number' ? json.editorDepth : null,
+            editorOrder: typeof json.editorOrder === 'number' ? json.editorOrder : null,
             text: json.text,
             backgroundImageUrl: json.backgroundImageUrl || null,
             audioUrl: json.audioUrl || null,
@@ -19,6 +23,23 @@ export async function PUT(
         return NextResponse.json(node);
     } catch {
         return NextResponse.json({ error: 'Failed to update node' }, { status: 500 });
+    }
+}
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const id = (await params).id;
+        const json = await request.json();
+        const node = await updateNodeLayout(id, {
+            editorDepth: typeof json.editorDepth === 'number' ? json.editorDepth : null,
+            editorOrder: typeof json.editorOrder === 'number' ? json.editorOrder : null,
+        });
+        return NextResponse.json(node);
+    } catch {
+        return NextResponse.json({ error: 'Failed to update node layout' }, { status: 500 });
     }
 }
 

@@ -21,6 +21,10 @@ export async function POST(request: Request) {
         const node = await createNode({
             storyId: json.storyId,
             characterId: json.characterId || null,
+            characterSpriteId: json.characterSpriteId || null,
+            backgroundId: json.backgroundId || null,
+            editorDepth: typeof json.editorDepth === 'number' ? json.editorDepth : null,
+            editorOrder: typeof json.editorOrder === 'number' ? json.editorOrder : null,
             text: json.text,
             backgroundImageUrl: json.backgroundImageUrl || null,
             audioUrl: json.audioUrl || null,
