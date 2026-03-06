@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { deleteNode, updateNode } from '@/lib/data-store';
 
 export async function PUT(
     request: Request,
@@ -8,16 +8,13 @@ export async function PUT(
     try {
         const id = (await params).id;
         const json = await request.json();
-        const node = await prisma.node.update({
-            where: { id },
-            data: {
-                characterId: json.characterId || null,
-                text: json.text,
-                backgroundImageUrl: json.backgroundImageUrl || null,
-                audioUrl: json.audioUrl || null,
-                isStartNode: json.isStartNode,
-                isEndNode: json.isEndNode,
-            },
+        const node = await updateNode(id, {
+            characterId: json.characterId || null,
+            text: json.text,
+            backgroundImageUrl: json.backgroundImageUrl || null,
+            audioUrl: json.audioUrl || null,
+            isStartNode: json.isStartNode,
+            isEndNode: json.isEndNode,
         });
         return NextResponse.json(node);
     } catch {
@@ -31,12 +28,9 @@ export async function DELETE(
 ) {
     try {
         const id = (await params).id;
-        await prisma.node.delete({
-            where: { id },
-        });
+        await deleteNode(id);
         return NextResponse.json({ success: true });
     } catch {
         return NextResponse.json({ error: 'Failed to delete node' }, { status: 500 });
     }
 }
-

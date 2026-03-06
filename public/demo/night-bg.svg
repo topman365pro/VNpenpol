@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <rect width="1600" height="900" fill="#050816"/>
+  <path d="M0 0h1600v515H0z" fill="url(#sky)"/>
+  <path d="M0 515h1600v385H0z" fill="#090F1F"/>
+  <path d="M0 616h1600v284H0z" fill="#121826"/>
+  <path d="M145 487h174v250H145z" fill="#1C2436"/>
+  <path d="M373 449h224v288H373z" fill="#182133"/>
+  <path d="M654 390h171v347H654z" fill="#202B42"/>
+  <path d="M865 438h216v299H865z" fill="#182133"/>
+  <path d="M1128 477h163v260h-163z" fill="#202B42"/>
+  <path d="M1324 401h121v336h-121z" fill="#182133"/>
+  <path d="M193 532h78v57h-78z" fill="#FCD34D"/>
+  <path d="M193 608h78v57h-78z" fill="#FCD34D"/>
+  <path d="M429 502h112v64H429z" fill="#FCD34D"/>
+  <path d="M429 596h112v64H429z" fill="#FCD34D"/>
+  <path d="M697 465h86v56h-86z" fill="#FCD34D"/>
+  <path d="M697 550h86v56h-86z" fill="#FCD34D"/>
+  <path d="M920 495h107v61H920z" fill="#FCD34D"/>
+  <path d="M920 584h107v61H920z" fill="#FCD34D"/>
+  <circle cx="1272" cy="131" r="57" fill="#F8FAFC"/>
+  <circle cx="247" cy="122" r="3" fill="#F8FAFC"/>
+  <circle cx="302" cy="181" r="2.5" fill="#F8FAFC"/>
+  <circle cx="382" cy="97" r="2.5" fill="#F8FAFC"/>
+  <circle cx="438" cy="164" r="2" fill="#F8FAFC"/>
+  <circle cx="548" cy="113" r="2.5" fill="#F8FAFC"/>
+  <circle cx="617" cy="78" r="2" fill="#F8FAFC"/>
+  <circle cx="735" cy="149" r="2.5" fill="#F8FAFC"/>
+  <circle cx="823" cy="91" r="2" fill="#F8FAFC"/>
+  <circle cx="932" cy="173" r="2.5" fill="#F8FAFC"/>
+  <circle cx="1044" cy="89" r="2.5" fill="#F8FAFC"/>
+  <defs>
+    <linearGradient id="sky" x1="800" x2="800" y1="0" y2="515" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1B3B"/>
+      <stop offset="1" stop-color="#050816"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -23,7 +23,7 @@ export default function AdminLayout({
                     <Link href="/" style={{ color: 'var(--text-muted)' }}>Back to Site</Link>
                 </nav>
             </header>
-            <main style={{ flex: 1, padding: '2rem', maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+            <main style={{ flex: 1, padding: '2rem', maxWidth: '1480px', margin: '0 auto', width: '100%' }}>
                 {children}
             </main>
         </div>

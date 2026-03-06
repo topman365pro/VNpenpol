@@ -1,10 +1,15 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Story } from '@prisma/client';
+
+interface StoryRecord {
+    id: string;
+    title: string;
+    description: string | null;
+}
 
 export default function StoriesAdmin() {
-    const [stories, setStories] = useState<Story[]>([]);
+    const [stories, setStories] = useState<StoryRecord[]>([]);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(true);
@@ -56,7 +61,7 @@ export default function StoriesAdmin() {
         }
     };
 
-    const handleEdit = (story: Story) => {
+    const handleEdit = (story: StoryRecord) => {
         setEditingId(story.id);
         setTitle(story.title);
         setDescription(story.description || '');
@@ -135,6 +140,9 @@ export default function StoriesAdmin() {
                                         <button onClick={() => handleEdit(story)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
                                             Edit
                                         </button>
+                                        <Link href={`/admin/stories/${story.id}/flow`} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                                            Flow
+                                        </Link>
                                         <Link href={`/admin/stories/${story.id}/nodes`} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
                                             Nodes
                                         </Link>

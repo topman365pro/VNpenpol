@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <rect width="1600" height="900" fill="#08111D"/>
+  <path d="M0 0h1600v212H0z" fill="url(#sky)"/>
+  <path d="M0 212h1600v688H0z" fill="#0E1B2F"/>
+  <path d="M163 284h1274v410H163z" fill="#122742"/>
+  <path d="M208 321h1184v48H208z" fill="#1B3B64"/>
+  <path d="M266 402h1068v243H266z" fill="#0A1220"/>
+  <path d="M303 438h994v170H303z" fill="url(#glass)"/>
+  <path d="M130 730h1340v170H130z" fill="#261A15"/>
+  <path d="M166 768h1268v132H166z" fill="#3C2A20"/>
+  <path d="M233 679h1134v32H233z" fill="#6B4C34"/>
+  <circle cx="253" cy="126" r="77" fill="#2DD4BF" fill-opacity=".08"/>
+  <circle cx="1357" cy="103" r="106" fill="#F59E0B" fill-opacity=".08"/>
+  <defs>
+    <linearGradient id="sky" x1="800" x2="800" y1="0" y2="212" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102543"/>
+      <stop offset="1" stop-color="#08111D"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="800" x2="800" y1="438" y2="608" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1A3E6B"/>
+      <stop offset="1" stop-color="#0E2037"/>
+    </linearGradient>
+  </defs>
+</svg>

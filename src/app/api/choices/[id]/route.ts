@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { deleteChoice, updateChoice } from '@/lib/data-store';
 
 export async function PUT(
     request: Request,
@@ -8,13 +8,10 @@ export async function PUT(
     try {
         const id = (await params).id;
         const json = await request.json();
-        const choice = await prisma.choice.update({
-            where: { id },
-            data: {
-                text: json.text,
-                targetNodeId: json.targetNodeId || null,
-                scoreImpact: json.scoreImpact !== undefined ? Number(json.scoreImpact) : 0,
-            },
+        const choice = await updateChoice(id, {
+            text: json.text,
+            targetNodeId: json.targetNodeId || null,
+            scoreImpact: json.scoreImpact !== undefined ? Number(json.scoreImpact) : 0,
         });
         return NextResponse.json(choice);
     } catch {
@@ -28,12 +25,9 @@ export async function DELETE(
 ) {
     try {
         const id = (await params).id;
-        await prisma.choice.delete({
-            where: { id },
-        });
+        await deleteChoice(id);
         return NextResponse.json({ success: true });
     } catch {
         return NextResponse.json({ error: 'Failed to delete choice' }, { status: 500 });
     }
 }
-

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { readdir, unlink, stat } from 'fs/promises';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -45,4 +47,3 @@ export async function DELETE(request: Request) {
         return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 });
     }
 }
-

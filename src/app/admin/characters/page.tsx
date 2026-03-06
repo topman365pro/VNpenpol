@@ -1,10 +1,15 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 import { useState, useEffect, useCallback } from 'react';
-import { Character } from '@prisma/client';
+
+interface CharacterRecord {
+    id: string;
+    name: string;
+    spriteImageUrl: string | null;
+}
 
 export default function CharactersAdmin() {
-    const [characters, setCharacters] = useState<Character[]>([]);
+    const [characters, setCharacters] = useState<CharacterRecord[]>([]);
     const [name, setName] = useState('');
     const [spriteImageUrl, setSpriteImageUrl] = useState('');
     const [loading, setLoading] = useState(true);
@@ -56,7 +61,7 @@ export default function CharactersAdmin() {
         }
     };
 
-    const handleEdit = (char: Character) => {
+    const handleEdit = (char: CharacterRecord) => {
         setEditingId(char.id);
         setName(char.name);
         setSpriteImageUrl(char.spriteImageUrl || '');

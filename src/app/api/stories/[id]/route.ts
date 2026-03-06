@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { deleteStory, updateStory } from '@/lib/data-store';
 
 export async function PUT(
     request: Request,
@@ -8,12 +8,9 @@ export async function PUT(
     try {
         const id = (await params).id;
         const json = await request.json();
-        const story = await prisma.story.update({
-            where: { id },
-            data: {
-                title: json.title,
-                description: json.description,
-            },
+        const story = await updateStory(id, {
+            title: json.title,
+            description: json.description,
         });
         return NextResponse.json(story);
     } catch {
@@ -27,12 +24,9 @@ export async function DELETE(
 ) {
     try {
         const id = (await params).id;
-        await prisma.story.delete({
-            where: { id },
-        });
+        await deleteStory(id);
         return NextResponse.json({ success: true });
     } catch {
         return NextResponse.json({ error: 'Failed to delete story' }, { status: 500 });
     }
 }
-
