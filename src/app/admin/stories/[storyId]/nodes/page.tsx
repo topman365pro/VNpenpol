@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import BackgroundSelectField from '@/components/admin/BackgroundSelectField';
+import MusicTrackSelectField from '@/components/admin/MusicTrackSelectField';
 import NodeAudioField from '@/components/admin/NodeAudioField';
 import { useAssetLibrary } from '@/components/admin/use-asset-library';
 import { deriveAssetLabel } from '@/lib/asset-utils';
@@ -29,6 +30,12 @@ interface Background {
     imageUrl: string;
 }
 
+interface MusicTrack {
+    id: string;
+    name: string;
+    audioUrl: string;
+}
+
 interface Choice {
     id: string;
     nodeId: string;
@@ -43,6 +50,7 @@ interface NodeRecord {
     characterId: string | null;
     characterSpriteId: string | null;
     backgroundId: string | null;
+    musicTrackId: string | null;
     editorDepth: number;
     editorOrder: number;
     text: string;
@@ -54,6 +62,8 @@ interface NodeRecord {
     spriteImageUrl: string | null;
     background: Background | null;
     backgroundImageUrl: string | null;
+    musicTrack: MusicTrack | null;
+    musicTrackAudioUrl: string | null;
     choices: Choice[];
 }
 
@@ -78,6 +88,7 @@ export default function NodesEditor() {
     const [nodes, setNodes] = useState<NodeRecord[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [backgrounds, setBackgrounds] = useState<Background[]>([]);
+    const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
     const [loading, setLoading] = useState(true);
     const [storyTitle, setStoryTitle] = useState('');
 
@@ -86,6 +97,7 @@ export default function NodesEditor() {
     const [nodeCharacterId, setNodeCharacterId] = useState('');
     const [nodeCharacterSpriteId, setNodeCharacterSpriteId] = useState('');
     const [nodeBackgroundId, setNodeBackgroundId] = useState('');
+    const [nodeMusicTrackId, setNodeMusicTrackId] = useState('');
     const [nodeAudioUrl, setNodeAudioUrl] = useState('');
     const [nodeEditorDepth, setNodeEditorDepth] = useState(0);
     const [nodeEditorOrder, setNodeEditorOrder] = useState(0);
@@ -115,11 +127,12 @@ export default function NodesEditor() {
 
     const fetchNodes = useCallback(async () => {
         setLoading(true);
-        const [nodesRes, charsRes, storyRes, backgroundsRes] = await Promise.all([
+        const [nodesRes, charsRes, storyRes, backgroundsRes, musicTracksRes] = await Promise.all([
             fetch(`/api/nodes?storyId=${storyId}`),
             fetch('/api/characters'),
             fetch('/api/stories'),
             fetch('/api/backgrounds'),
+            fetch('/api/music-tracks'),
         ]);
 
         if (nodesRes.ok) {
@@ -135,6 +148,9 @@ export default function NodesEditor() {
         }
         if (backgroundsRes.ok) {
             setBackgrounds(await backgroundsRes.json());
+        }
+        if (musicTracksRes.ok) {
+            setMusicTracks(await musicTracksRes.json());
         }
         if (storyRes.ok) {
             const stories = await storyRes.json();
@@ -157,6 +173,7 @@ export default function NodesEditor() {
         setNodeCharacterId('');
         setNodeCharacterSpriteId('');
         setNodeBackgroundId('');
+        setNodeMusicTrackId('');
         setNodeAudioUrl('');
         setNodeEditorDepth(getDefaultCreateDepth(nodes));
         setNodeEditorOrder(0);
@@ -196,6 +213,31 @@ export default function NodesEditor() {
         return background.id as string;
     }
 
+    async function handleQuickCreateMusicTrack(files: File[]) {
+        const uploaded = await audioAssets.uploadFiles(files.slice(0, 1));
+        const firstUpload = uploaded[0];
+        if (!firstUpload) {
+            return null;
+        }
+
+        const response = await fetch('/api/music-tracks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: deriveAssetLabel(firstUpload.url, 'Music Track'),
+                audioUrl: firstUpload.url,
+            }),
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const musicTrack = await response.json();
+        setMusicTracks((current) => [musicTrack, ...current]);
+        return musicTrack.id as string;
+    }
+
     async function handleNodeSubmit(event: React.FormEvent) {
         event.preventDefault();
         if (!nodeText.trim()) {
@@ -207,6 +249,7 @@ export default function NodesEditor() {
             characterId: nodeCharacterId || null,
             characterSpriteId: activeNodeCharacterSpriteId || null,
             backgroundId: nodeBackgroundId || null,
+            musicTrackId: nodeMusicTrackId || null,
             editorDepth: nodeEditorDepth,
             editorOrder: nodeEditorOrder,
             text: nodeText,
@@ -239,6 +282,7 @@ export default function NodesEditor() {
         setNodeCharacterId(node.characterId || '');
         setNodeCharacterSpriteId(node.characterSpriteId || '');
         setNodeBackgroundId(node.backgroundId || '');
+        setNodeMusicTrackId(node.musicTrackId || '');
         setNodeAudioUrl(node.audioUrl || '');
         setNodeEditorDepth(node.editorDepth);
         setNodeEditorOrder(node.editorOrder);
@@ -390,6 +434,15 @@ export default function NodesEditor() {
                                 onQuickCreate={handleQuickCreateBackground}
                             />
 
+                            <MusicTrackSelectField
+                                label="Change Background Music"
+                                noneLabel="No change"
+                                musicTracks={musicTracks}
+                                value={nodeMusicTrackId}
+                                onChange={setNodeMusicTrackId}
+                                onQuickCreate={handleQuickCreateMusicTrack}
+                            />
+
                             <NodeAudioField
                                 value={nodeAudioUrl}
                                 onChange={setNodeAudioUrl}
@@ -488,6 +541,7 @@ export default function NodesEditor() {
                                         {!node.character && <span className="badge badge-secondary">Narrator</span>}
                                         {getNodeSpriteLabel(node) && <span className="badge badge-primary">{getNodeSpriteLabel(node)}</span>}
                                         {node.background && <span className="badge badge-secondary">{node.background.name}</span>}
+                                        {node.musicTrack && <span className="badge badge-accent">BGM: {node.musicTrack.name}</span>}
                                         {node.audioUrl && <span className="badge badge-secondary">Audio</span>}
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
@@ -498,13 +552,16 @@ export default function NodesEditor() {
 
                                 <p style={{ marginBottom: '1rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{node.text}</p>
 
-                                {(node.backgroundImageUrl || node.audioUrl || node.spriteImageUrl) && (
+                                {(node.backgroundImageUrl || node.musicTrackAudioUrl || node.audioUrl || node.spriteImageUrl) && (
                                     <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                                         {node.spriteImageUrl && (
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>🙂 {node.spriteImageUrl}</span>
                                         )}
                                         {node.backgroundImageUrl && (
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>🖼️ {node.background?.name ?? node.backgroundImageUrl}</span>
+                                        )}
+                                        {node.musicTrackAudioUrl && (
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>🎵 {node.musicTrack?.name ?? node.musicTrackAudioUrl}</span>
                                         )}
                                         {node.audioUrl && (
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>🔊 {node.audioUrl}</span>

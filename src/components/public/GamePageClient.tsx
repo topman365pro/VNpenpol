@@ -28,11 +28,20 @@ interface Choice {
     scoreImpact: number;
 }
 
+interface MusicTrack {
+    id: string;
+    name: string;
+    audioUrl: string;
+}
+
 interface Node {
     id: string;
     text: string;
     backgroundImageUrl: string | null;
     audioUrl: string | null;
+    musicTrackId: string | null;
+    musicTrack: MusicTrack | null;
+    musicTrackAudioUrl: string | null;
     isStartNode: boolean;
     isEndNode: boolean;
     character: Character | null;
@@ -51,6 +60,8 @@ interface GamePageClientProps {
 export default function GamePageClient({ storyId, locale, copy }: GamePageClientProps) {
     const [nodes, setNodes] = useState<Node[]>([]);
     const [currentNode, setCurrentNode] = useState<Node | null>(null);
+    const [activeMusicTrack, setActiveMusicTrack] = useState<MusicTrack | null>(null);
+    const [isBgmMuted, setIsBgmMuted] = useState(false);
     const [score, setScore] = useState(0);
     const [loading, setLoading] = useState(true);
     const [forcedGameOver, setForcedGameOver] = useState(false);
@@ -59,6 +70,7 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const bgmAudioRef = useRef<HTMLAudioElement | null>(null);
     const typeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const beginTyping = useEffectEvent((text: string) => {
@@ -81,17 +93,26 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
 
     useEffect(() => {
         (async () => {
-            const response = await fetch(`/api/nodes?storyId=${storyId}`);
-            if (response.ok) {
-                const data: Node[] = await response.json();
+            const [nodesResponse, storyResponse] = await Promise.all([
+                fetch(`/api/nodes?storyId=${storyId}`),
+                fetch(`/api/stories/${storyId}`),
+            ]);
+
+            if (nodesResponse.ok) {
+                const data: Node[] = await nodesResponse.json();
                 setNodes(data);
-                const startNode = data.find((node) => node.isStartNode);
+                const startNode = data.find((node) => node.isStartNode) ?? data[0] ?? null;
                 if (startNode) {
                     setCurrentNode(startNode);
-                } else if (data.length > 0) {
-                    setCurrentNode(data[0]);
                 }
                 setForcedGameOver(false);
+                if (storyResponse.ok) {
+                    const story = await storyResponse.json();
+                    const nextDefaultMusicTrack = story.defaultMusicTrack ?? null;
+                    setActiveMusicTrack(startNode?.musicTrack ?? nextDefaultMusicTrack ?? null);
+                } else {
+                    setActiveMusicTrack(startNode?.musicTrack ?? null);
+                }
             }
             setLoading(false);
         })();
@@ -106,10 +127,13 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
             beginTyping(currentNode.text);
         }, 0);
 
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            audioRef.current = null;
+        }
+
         if (currentNode.audioUrl) {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
             const audio = new Audio(currentNode.audioUrl);
             audioRef.current = audio;
             audio.play().catch(() => { });
@@ -123,14 +147,57 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
     }, [currentNode]);
 
     useEffect(() => {
+        if (bgmAudioRef.current) {
+            bgmAudioRef.current.muted = isBgmMuted;
+        }
+    }, [isBgmMuted]);
+
+    useEffect(() => {
+        if (!activeMusicTrack?.audioUrl) {
+            if (bgmAudioRef.current) {
+                bgmAudioRef.current.pause();
+                bgmAudioRef.current = null;
+            }
+            return;
+        }
+
+        if (bgmAudioRef.current?.src === new URL(activeMusicTrack.audioUrl, window.location.origin).toString()) {
+            bgmAudioRef.current.muted = isBgmMuted;
+            bgmAudioRef.current.play().catch(() => { });
+            return;
+        }
+
+        if (bgmAudioRef.current) {
+            bgmAudioRef.current.pause();
+        }
+
+        const bgm = new Audio(activeMusicTrack.audioUrl);
+        bgm.loop = true;
+        bgm.muted = isBgmMuted;
+        bgm.volume = 0.55;
+        bgmAudioRef.current = bgm;
+        bgm.play().catch(() => { });
+
+        return () => {
+            if (bgmAudioRef.current === bgm) {
+                bgm.pause();
+            }
+        };
+    }, [activeMusicTrack, isBgmMuted]);
+
+    useEffect(() => {
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause();
+            }
+            if (bgmAudioRef.current) {
+                bgmAudioRef.current.pause();
             }
         };
     }, []);
 
     function skipTyping() {
+        bgmAudioRef.current?.play().catch(() => { });
         if (isTyping && currentNode) {
             if (typeTimeoutRef.current) {
                 clearTimeout(typeTimeoutRef.current);
@@ -141,6 +208,7 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
     }
 
     function handleChoice(choice: Choice) {
+        bgmAudioRef.current?.play().catch(() => { });
         if (isTyping) {
             return;
         }
@@ -151,12 +219,20 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
             const nextNode = nodes.find((node) => node.id === choice.targetNodeId);
             if (nextNode) {
                 setForcedGameOver(false);
+                if (nextNode.musicTrack) {
+                    setActiveMusicTrack((previous) => previous?.id === nextNode.musicTrack?.id ? previous : nextNode.musicTrack);
+                }
                 setCurrentNode(nextNode);
                 return;
             }
         }
 
         setForcedGameOver(true);
+    }
+
+    function toggleBgmMute() {
+        setIsBgmMuted((current) => !current);
+        bgmAudioRef.current?.play().catch(() => { });
     }
 
     async function handleSubmitScore() {
@@ -308,7 +384,18 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
+                flexWrap: 'wrap',
             }}>
+                {activeMusicTrack && (
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={toggleBgmMute}
+                        style={{ padding: '0.35rem 0.7rem', fontSize: '0.78rem' }}
+                    >
+                        {isBgmMuted ? copy.bgmUnmute : copy.bgmMute}
+                    </button>
+                )}
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{copy.scoreLabel}:</span>
                 <span style={{ fontWeight: 700, color: score > 0 ? 'var(--success-light)' : score < 0 ? 'var(--danger-light)' : 'var(--text-primary)' }}>
                     {score > 0 ? '+' : ''}{score}

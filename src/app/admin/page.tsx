@@ -3,7 +3,7 @@ export default function AdminPage() {
         <div>
             <h1 className="text-gradient" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Admin Dashboard</h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: '3rem' }}>
-                Manage stories, reusable scene backgrounds, character art, uploaded assets, and player scores.
+                Manage stories, reusable scene backgrounds, background music, character art, uploaded assets, and player scores.
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
@@ -18,6 +18,10 @@ export default function AdminPage() {
                 <a href="/admin/backgrounds" className="glass-panel" style={{ padding: '2rem', display: 'block', border: '1px solid rgba(103, 232, 249, 0.5)' }}>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Backgrounds</h3>
                     <p style={{ color: 'var(--text-muted)' }}>Create reusable scene backdrops with upload support and assign them by name inside node editors.</p>
+                </a>
+                <a href="/admin/music" className="glass-panel" style={{ padding: '2rem', display: 'block', border: '1px solid rgba(244, 114, 182, 0.45)' }}>
+                    <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Music</h3>
+                    <p style={{ color: 'var(--text-muted)' }}>Upload looping background tracks once, set story defaults, and switch music from individual nodes.</p>
                 </a>
                 <a href="/admin/leaderboard" className="glass-panel" style={{ padding: '2rem', display: 'block', border: '1px solid var(--accent)' }}>
                     <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Leaderboard</h3>

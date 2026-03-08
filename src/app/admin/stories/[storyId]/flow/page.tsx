@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import BackgroundSelectField from '@/components/admin/BackgroundSelectField';
+import MusicTrackSelectField from '@/components/admin/MusicTrackSelectField';
 import NodeAudioField from '@/components/admin/NodeAudioField';
 import { useAssetLibrary } from '@/components/admin/use-asset-library';
 import { deriveAssetLabel } from '@/lib/asset-utils';
@@ -30,6 +31,12 @@ interface Background {
     imageUrl: string;
 }
 
+interface MusicTrack {
+    id: string;
+    name: string;
+    audioUrl: string;
+}
+
 interface Choice {
     id: string;
     nodeId: string;
@@ -44,6 +51,7 @@ interface NodeRecord {
     characterId: string | null;
     characterSpriteId: string | null;
     backgroundId: string | null;
+    musicTrackId: string | null;
     editorDepth: number;
     editorOrder: number;
     text: string;
@@ -55,6 +63,8 @@ interface NodeRecord {
     spriteImageUrl: string | null;
     background: Background | null;
     backgroundImageUrl: string | null;
+    musicTrack: MusicTrack | null;
+    musicTrackAudioUrl: string | null;
     choices: Choice[];
     createdAt: string;
     updatedAt: string;
@@ -168,6 +178,7 @@ function createGhostNode(storyId: string, editorDepth: number, editorOrder: numb
         characterId: null,
         characterSpriteId: null,
         backgroundId: null,
+        musicTrackId: null,
         editorDepth,
         editorOrder,
         text: text.trim() || 'New node',
@@ -179,6 +190,8 @@ function createGhostNode(storyId: string, editorDepth: number, editorOrder: numb
         spriteImageUrl: null,
         background: null,
         backgroundImageUrl: null,
+        musicTrack: null,
+        musicTrackAudioUrl: null,
         choices: [],
         createdAt: '9999-12-31T00:00:00.000Z',
         updatedAt: '9999-12-31T00:00:00.000Z',
@@ -197,6 +210,7 @@ export default function StoryFlowEditorPage() {
     const [nodes, setNodes] = useState<NodeRecord[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [backgrounds, setBackgrounds] = useState<Background[]>([]);
+    const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
     const [storyTitle, setStoryTitle] = useState('');
     const [loading, setLoading] = useState(true);
     const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -210,6 +224,7 @@ export default function StoryFlowEditorPage() {
     const [nodeCharacterId, setNodeCharacterId] = useState('');
     const [nodeCharacterSpriteId, setNodeCharacterSpriteId] = useState('');
     const [nodeBackgroundId, setNodeBackgroundId] = useState('');
+    const [nodeMusicTrackId, setNodeMusicTrackId] = useState('');
     const [nodeAudioUrl, setNodeAudioUrl] = useState('');
     const [nodeEditorDepth, setNodeEditorDepth] = useState(0);
     const [nodeEditorOrder, setNodeEditorOrder] = useState(0);
@@ -292,6 +307,7 @@ export default function StoryFlowEditorPage() {
         setNodeCharacterId('');
         setNodeCharacterSpriteId('');
         setNodeBackgroundId('');
+        setNodeMusicTrackId('');
         setNodeAudioUrl('');
         setNodeEditorDepth(0);
         setNodeEditorOrder(0);
@@ -308,6 +324,7 @@ export default function StoryFlowEditorPage() {
         setNodeCharacterId(node.characterId ?? '');
         setNodeCharacterSpriteId(node.characterSpriteId ?? '');
         setNodeBackgroundId(node.backgroundId ?? '');
+        setNodeMusicTrackId(node.musicTrackId ?? '');
         setNodeAudioUrl(node.audioUrl ?? '');
         setNodeEditorDepth(node.editorDepth);
         setNodeEditorOrder(node.editorOrder);
@@ -324,6 +341,7 @@ export default function StoryFlowEditorPage() {
         setNodeCharacterId('');
         setNodeCharacterSpriteId('');
         setNodeBackgroundId('');
+        setNodeMusicTrackId('');
         setNodeAudioUrl('');
         setNodeEditorDepth(placement.editorDepth);
         setNodeEditorOrder(placement.editorOrder);
@@ -336,21 +354,24 @@ export default function StoryFlowEditorPage() {
     const fetchEditorData = useCallback(async (preferredNodeId?: string | null) => {
         setLoading(true);
         try {
-            const [nodesRes, charsRes, storiesRes, backgroundsRes] = await Promise.all([
+            const [nodesRes, charsRes, storiesRes, backgroundsRes, musicTracksRes] = await Promise.all([
                 fetch(`/api/nodes?storyId=${storyId}`),
                 fetch('/api/characters'),
                 fetch('/api/stories'),
                 fetch('/api/backgrounds'),
+                fetch('/api/music-tracks'),
             ]);
 
             const nextNodes: NodeRecord[] = nodesRes.ok ? await nodesRes.json() : [];
             const nextCharacters: Character[] = charsRes.ok ? await charsRes.json() : [];
             const nextStories: { id: string; title: string }[] = storiesRes.ok ? await storiesRes.json() : [];
             const nextBackgrounds: Background[] = backgroundsRes.ok ? await backgroundsRes.json() : [];
+            const nextMusicTracks: MusicTrack[] = musicTracksRes.ok ? await musicTracksRes.json() : [];
 
             setNodes(nextNodes);
             setCharacters(nextCharacters);
             setBackgrounds(nextBackgrounds);
+            setMusicTracks(nextMusicTracks);
             setStoryTitle(nextStories.find((entry) => entry.id === storyId)?.title ?? 'Story Flow');
 
             const nextSelectedId = preferredNodeId ?? selectedNodeIdRef.current;
@@ -367,6 +388,7 @@ export default function StoryFlowEditorPage() {
                 setNodeCharacterId('');
                 setNodeCharacterSpriteId('');
                 setNodeBackgroundId('');
+                setNodeMusicTrackId('');
                 setNodeAudioUrl('');
                 setNodeEditorDepth(0);
                 setNodeEditorOrder(0);
@@ -435,6 +457,31 @@ export default function StoryFlowEditorPage() {
         return background.id as string;
     }
 
+    async function handleQuickCreateMusicTrack(files: File[]) {
+        const uploaded = await audioAssets.uploadFiles(files.slice(0, 1));
+        const firstUpload = uploaded[0];
+        if (!firstUpload) {
+            return null;
+        }
+
+        const response = await fetch('/api/music-tracks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: deriveAssetLabel(firstUpload.url, 'Music Track'),
+                audioUrl: firstUpload.url,
+            }),
+        });
+
+        if (!response.ok) {
+            return null;
+        }
+
+        const musicTrack = await response.json();
+        setMusicTracks((current) => [musicTrack, ...current]);
+        return musicTrack.id as string;
+    }
+
     async function handleNodeSubmit(event: React.FormEvent) {
         event.preventDefault();
         if (!nodeText.trim()) {
@@ -447,6 +494,7 @@ export default function StoryFlowEditorPage() {
             characterId: nodeCharacterId || null,
             characterSpriteId: activeNodeCharacterSpriteId || null,
             backgroundId: nodeBackgroundId || null,
+            musicTrackId: nodeMusicTrackId || null,
             editorDepth: nodeEditorDepth,
             editorOrder: nodeEditorOrder,
             text: nodeText,
@@ -822,6 +870,7 @@ export default function StoryFlowEditorPage() {
                                             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.8rem' }}>
                                                 {!node.isGhost && node.spriteImageUrl && <span className="badge badge-primary">Sprite</span>}
                                                 {!node.isGhost && node.background && <span className="badge badge-accent">{node.background.name}</span>}
+                                                {!node.isGhost && node.musicTrack && <span className="badge badge-accent">BGM</span>}
                                                 {!node.isGhost && node.audioUrl && <span className="badge badge-secondary">Audio</span>}
                                             </div>
                                         </div>
@@ -941,6 +990,15 @@ export default function StoryFlowEditorPage() {
                                 value={nodeBackgroundId}
                                 onChange={setNodeBackgroundId}
                                 onQuickCreate={handleQuickCreateBackground}
+                            />
+
+                            <MusicTrackSelectField
+                                label="Change Background Music"
+                                noneLabel="No change"
+                                musicTracks={musicTracks}
+                                value={nodeMusicTrackId}
+                                onChange={setNodeMusicTrackId}
+                                onQuickCreate={handleQuickCreateMusicTrack}
                             />
 
                             <NodeAudioField

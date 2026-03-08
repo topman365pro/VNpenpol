@@ -9,6 +9,7 @@ export interface StoryRecord {
     id: string;
     title: string;
     description: string | null;
+    defaultMusicTrackId: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -40,6 +41,14 @@ export interface BackgroundRecord {
     updatedAt: string;
 }
 
+export interface MusicTrackRecord {
+    id: string;
+    name: string;
+    audioUrl: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export type CharacterWithSprites = Omit<CharacterRecord, 'spriteImageUrl'> & {
     sprites: CharacterSpriteRecord[];
     defaultSprite: CharacterSpriteRecord | null;
@@ -51,6 +60,7 @@ export interface NodeRecord {
     characterId: string | null;
     characterSpriteId: string | null;
     backgroundId: string | null;
+    musicTrackId: string | null;
     editorDepth: number;
     editorOrder: number;
     text: string;
@@ -88,7 +98,13 @@ export interface HydratedNodeRecord extends NodeRecord {
     spriteImageUrl: string | null;
     background: BackgroundRecord | null;
     backgroundImageUrl: string | null;
+    musicTrack: MusicTrackRecord | null;
+    musicTrackAudioUrl: string | null;
     choices: ChoiceRecord[];
+}
+
+export interface HydratedStoryRecord extends StoryRecord {
+    defaultMusicTrack: MusicTrackRecord | null;
 }
 
 type DBClient = typeof prisma | Prisma.TransactionClient;
@@ -97,17 +113,19 @@ type LegacyCharacterRecord = CharacterRecord & {
     spriteImageUrl?: string | null;
 };
 
-type LegacyNodeRecord = Omit<NodeRecord, 'characterSpriteId' | 'backgroundId'> & {
+type LegacyNodeRecord = Omit<NodeRecord, 'characterSpriteId' | 'backgroundId' | 'musicTrackId'> & {
     characterSpriteId?: string | null;
     backgroundId?: string | null;
+    musicTrackId?: string | null;
     backgroundImageUrl?: string | null;
 };
 
 type LegacyDatabaseShape = {
-    stories?: StoryRecord[];
+    stories?: Array<Omit<StoryRecord, 'defaultMusicTrackId'> & { defaultMusicTrackId?: string | null }>;
     characters?: LegacyCharacterRecord[];
     characterSprites?: CharacterSpriteRecord[];
     backgrounds?: BackgroundRecord[];
+    musicTracks?: MusicTrackRecord[];
     nodes?: LegacyNodeRecord[];
     choices?: ChoiceRecord[];
     playerScores?: PlayerScoreRecord[];
@@ -141,6 +159,7 @@ const nodeInclude = {
     },
     characterSprite: true,
     background: true,
+    musicTrack: true,
     choices: {
         orderBy: {
             createdAt: 'asc',
@@ -168,6 +187,7 @@ function mapStory(story: {
     id: string;
     title: string;
     description: string | null;
+    defaultMusicTrackId: string | null;
     createdAt: Date;
     updatedAt: Date;
 }) {
@@ -175,6 +195,7 @@ function mapStory(story: {
         id: story.id,
         title: story.title,
         description: story.description,
+        defaultMusicTrackId: story.defaultMusicTrackId,
         createdAt: toIsoString(story.createdAt),
         updatedAt: toIsoString(story.updatedAt),
     };
@@ -193,6 +214,22 @@ function mapBackground(background: {
         imageUrl: background.imageUrl,
         createdAt: toIsoString(background.createdAt),
         updatedAt: toIsoString(background.updatedAt),
+    };
+}
+
+function mapMusicTrack(track: {
+    id: string;
+    name: string;
+    audioUrl: string;
+    createdAt: Date;
+    updatedAt: Date;
+}): MusicTrackRecord {
+    return {
+        id: track.id,
+        name: track.name,
+        audioUrl: track.audioUrl,
+        createdAt: toIsoString(track.createdAt),
+        updatedAt: toIsoString(track.updatedAt),
     };
 }
 
@@ -258,6 +295,7 @@ function mapNode(node: {
     characterId: string | null;
     characterSpriteId: string | null;
     backgroundId: string | null;
+    musicTrackId: string | null;
     editorDepth: number;
     editorOrder: number;
     text: string;
@@ -273,6 +311,7 @@ function mapNode(node: {
         characterId: node.characterId,
         characterSpriteId: node.characterSpriteId,
         backgroundId: node.backgroundId,
+        musicTrackId: node.musicTrackId,
         editorDepth: node.editorDepth,
         editorOrder: node.editorOrder,
         text: node.text,
@@ -291,6 +330,11 @@ function compareSprites(left: CharacterSpriteRecord, right: CharacterSpriteRecor
 }
 
 function compareBackgrounds(left: BackgroundRecord, right: BackgroundRecord) {
+    return right.createdAt.localeCompare(left.createdAt)
+        || left.name.localeCompare(right.name);
+}
+
+function compareMusicTracks(left: MusicTrackRecord, right: MusicTrackRecord) {
     return right.createdAt.localeCompare(left.createdAt)
         || left.name.localeCompare(right.name);
 }
@@ -510,12 +554,21 @@ async function bootstrapDatabase() {
         createdAt: new Date(background.createdAt || timestamp),
         updatedAt: new Date(background.updatedAt || background.createdAt || timestamp),
     })) : [];
+    const musicTracks = Array.isArray(legacy.musicTracks) ? legacy.musicTracks.map((track) => ({
+        id: track.id,
+        name: track.name || deriveAssetLabel(track.audioUrl, 'Music Track'),
+        audioUrl: track.audioUrl,
+        createdAt: new Date(track.createdAt || timestamp),
+        updatedAt: new Date(track.updatedAt || track.createdAt || timestamp),
+    })) : [];
+    const musicTrackIds = new Set(musicTracks.map((track) => track.id));
     const nodes = Array.isArray(legacy.nodes) ? legacy.nodes.map((node) => ({
         id: node.id,
         storyId: node.storyId,
         characterId: node.characterId?.trim() || null,
         characterSpriteId: node.characterSpriteId?.trim() || null,
         backgroundId: node.backgroundId?.trim() || null,
+        musicTrackId: node.musicTrackId?.trim() || null,
         editorDepth: Number.isFinite(node.editorDepth) ? Number(node.editorDepth) : 0,
         editorOrder: Number.isFinite(node.editorOrder) ? Number(node.editorOrder) : 0,
         text: node.text,
@@ -542,12 +595,19 @@ async function bootstrapDatabase() {
     })) : [];
 
     await prisma.$transaction(async (tx) => {
+        if (musicTracks.length > 0) {
+            await tx.musicTrack.createMany({ data: musicTracks });
+        }
+
         if (stories.length > 0) {
             await tx.story.createMany({
                 data: stories.map((story) => ({
                     id: story.id,
                     title: story.title,
                     description: story.description,
+                    defaultMusicTrackId: story.defaultMusicTrackId && musicTrackIds.has(story.defaultMusicTrackId)
+                        ? story.defaultMusicTrackId
+                        : null,
                     createdAt: new Date(story.createdAt || timestamp),
                     updatedAt: new Date(story.updatedAt || story.createdAt || timestamp),
                 })),
@@ -574,7 +634,14 @@ async function bootstrapDatabase() {
         });
 
         if (nodes.length > 0) {
-            await tx.node.createMany({ data: nodes });
+            await tx.node.createMany({
+                data: nodes.map((node) => ({
+                    ...node,
+                    musicTrackId: node.musicTrackId && musicTrackIds.has(node.musicTrackId)
+                        ? node.musicTrackId
+                        : null,
+                })),
+            });
         }
 
         if (choices.length > 0) {
@@ -680,6 +747,23 @@ async function resolveBackgroundSelection(
     });
 
     return created.id;
+}
+
+async function resolveMusicTrackSelection(
+    db: DBClient,
+    input: { musicTrackId?: string | null; defaultMusicTrackId?: string | null }
+) {
+    const musicTrackId = input.musicTrackId?.trim() || input.defaultMusicTrackId?.trim() || null;
+    if (!musicTrackId) {
+        return null;
+    }
+
+    const musicTrack = await db.musicTrack.findUnique({
+        where: { id: musicTrackId },
+        select: { id: true },
+    });
+
+    return musicTrack?.id ?? null;
 }
 
 function buildCreateLayoutNodes(
@@ -797,6 +881,7 @@ async function hydrateNodeById(id: string) {
         ? mappedCharacter.sprites.find((sprite) => sprite.id === node.characterSpriteId) ?? mappedCharacter.defaultSprite
         : null;
     const background = node.background ? mapBackground(node.background) : null;
+    const musicTrack = node.musicTrack ? mapMusicTrack(node.musicTrack) : null;
 
     return {
         ...mapNode(node),
@@ -805,8 +890,29 @@ async function hydrateNodeById(id: string) {
         spriteImageUrl: characterSprite?.imageUrl ?? null,
         background,
         backgroundImageUrl: background?.imageUrl ?? null,
+        musicTrack,
+        musicTrackAudioUrl: musicTrack?.audioUrl ?? null,
         choices: node.choices.map(mapChoice),
     } satisfies HydratedNodeRecord;
+}
+
+async function hydrateStoryById(id: string) {
+    const story = await prisma.story.findUnique({
+        where: { id },
+        include: {
+            defaultMusicTrack: true,
+        },
+    });
+    if (!story) {
+        throw new Error('Story not found');
+    }
+
+    const defaultMusicTrack = story.defaultMusicTrack ? mapMusicTrack(story.defaultMusicTrack) : null;
+
+    return {
+        ...mapStory(story),
+        defaultMusicTrack,
+    } satisfies HydratedStoryRecord;
 }
 
 async function syncCharacterSprites(
@@ -879,6 +985,7 @@ export async function listStories() {
     await ensureBootstrap();
     const stories = await prisma.story.findMany({
         include: {
+            defaultMusicTrack: true,
             nodes: {
                 select: {
                     id: true,
@@ -892,8 +999,14 @@ export async function listStories() {
 
     return stories.map((story) => ({
         ...mapStory(story),
+        defaultMusicTrack: story.defaultMusicTrack ? mapMusicTrack(story.defaultMusicTrack) : null,
         nodes: story.nodes,
     }));
+}
+
+export async function getStory(id: string) {
+    await ensureBootstrap();
+    return hydrateStoryById(id);
 }
 
 export async function getSiteSettings() {
@@ -926,30 +1039,38 @@ export async function updateSiteSettings(input: Partial<SiteSettingsRecord>) {
     } satisfies SiteSettingsRecord;
 }
 
-export async function createStory(input: { title: string; description?: string | null }) {
+export async function createStory(input: { title: string; description?: string | null; defaultMusicTrackId?: string | null }) {
     await ensureBootstrap();
-    const story = await prisma.story.create({
-        data: {
-            id: randomUUID(),
-            title: input.title.trim(),
-            description: input.description?.trim() || null,
-        },
+    const story = await prisma.$transaction(async (tx) => {
+        const defaultMusicTrackId = await resolveMusicTrackSelection(tx, input);
+        return tx.story.create({
+            data: {
+                id: randomUUID(),
+                title: input.title.trim(),
+                description: input.description?.trim() || null,
+                defaultMusicTrackId,
+            },
+        });
     });
 
-    return mapStory(story);
+    return hydrateStoryById(story.id);
 }
 
-export async function updateStory(id: string, input: { title: string; description?: string | null }) {
+export async function updateStory(id: string, input: { title: string; description?: string | null; defaultMusicTrackId?: string | null }) {
     await ensureBootstrap();
-    const story = await prisma.story.update({
-        where: { id },
-        data: {
-            title: input.title.trim(),
-            description: input.description?.trim() || null,
-        },
+    await prisma.$transaction(async (tx) => {
+        const defaultMusicTrackId = await resolveMusicTrackSelection(tx, input);
+        await tx.story.update({
+            where: { id },
+            data: {
+                title: input.title.trim(),
+                description: input.description?.trim() || null,
+                defaultMusicTrackId,
+            },
+        });
     });
 
-    return mapStory(story);
+    return hydrateStoryById(id);
 }
 
 export async function deleteStory(id: string) {
@@ -1071,6 +1192,66 @@ export async function listBackgrounds() {
     return backgrounds.map(mapBackground).sort(compareBackgrounds);
 }
 
+export async function listMusicTracks() {
+    await ensureBootstrap();
+    const musicTracks = await prisma.musicTrack.findMany({
+        orderBy: [
+            { createdAt: 'desc' },
+            { name: 'asc' },
+        ],
+    });
+
+    return musicTracks.map(mapMusicTrack).sort(compareMusicTracks);
+}
+
+export async function createMusicTrack(input: { name: string; audioUrl: string }) {
+    await ensureBootstrap();
+    const musicTrack = await prisma.musicTrack.create({
+        data: {
+            id: randomUUID(),
+            name: input.name.trim(),
+            audioUrl: input.audioUrl.trim(),
+        },
+    });
+    return mapMusicTrack(musicTrack);
+}
+
+export async function updateMusicTrack(id: string, input: { name: string; audioUrl: string }) {
+    await ensureBootstrap();
+    const musicTrack = await prisma.musicTrack.update({
+        where: { id },
+        data: {
+            name: input.name.trim(),
+            audioUrl: input.audioUrl.trim(),
+        },
+    });
+    return mapMusicTrack(musicTrack);
+}
+
+export async function deleteMusicTrack(id: string) {
+    await ensureBootstrap();
+    await prisma.$transaction(async (tx) => {
+        const timestamp = nowDate();
+        await tx.story.updateMany({
+            where: { defaultMusicTrackId: id },
+            data: {
+                defaultMusicTrackId: null,
+                updatedAt: timestamp,
+            },
+        });
+        await tx.node.updateMany({
+            where: { musicTrackId: id },
+            data: {
+                musicTrackId: null,
+                updatedAt: timestamp,
+            },
+        });
+        await tx.musicTrack.delete({
+            where: { id },
+        });
+    });
+}
+
 export async function createBackground(input: { name: string; imageUrl: string }) {
     await ensureBootstrap();
     const background = await prisma.background.create({
@@ -1128,6 +1309,7 @@ export async function listNodes(storyId?: string) {
             ? character.sprites.find((sprite) => sprite.id === node.characterSpriteId) ?? character.defaultSprite
             : null;
         const background = node.background ? mapBackground(node.background) : null;
+        const musicTrack = node.musicTrack ? mapMusicTrack(node.musicTrack) : null;
 
         return {
             ...mapNode(node),
@@ -1136,6 +1318,8 @@ export async function listNodes(storyId?: string) {
             spriteImageUrl: characterSprite?.imageUrl ?? null,
             background,
             backgroundImageUrl: background?.imageUrl ?? null,
+            musicTrack,
+            musicTrackAudioUrl: musicTrack?.audioUrl ?? null,
             choices: node.choices.map(mapChoice),
         } satisfies HydratedNodeRecord;
     });
@@ -1147,6 +1331,7 @@ export async function createNode(input: {
     characterSpriteId?: string | null;
     backgroundId?: string | null;
     backgroundImageUrl?: string | null;
+    musicTrackId?: string | null;
     editorDepth?: number | null;
     editorOrder?: number | null;
     text: string;
@@ -1167,6 +1352,7 @@ export async function createNode(input: {
         })).map(mapNode);
         const characterSelection = await resolveCharacterSelection(tx, input);
         const backgroundId = await resolveBackgroundSelection(tx, input);
+        const musicTrackId = await resolveMusicTrackSelection(tx, input);
         const layout = getNextLayoutDefaults(storyNodes, input.storyId, input);
         const draftNode = {
             id: randomUUID(),
@@ -1174,6 +1360,7 @@ export async function createNode(input: {
             characterId: characterSelection.characterId,
             characterSpriteId: characterSelection.characterSpriteId,
             backgroundId,
+            musicTrackId,
             editorDepth: layout.editorDepth,
             editorOrder: layout.editorOrder,
             text: input.text.trim(),
@@ -1221,6 +1408,7 @@ export async function updateNode(id: string, input: {
     characterSpriteId?: string | null;
     backgroundId?: string | null;
     backgroundImageUrl?: string | null;
+    musicTrackId?: string | null;
     editorDepth?: number | null;
     editorOrder?: number | null;
     text: string;
@@ -1247,6 +1435,7 @@ export async function updateNode(id: string, input: {
         })).map(mapNode);
         const characterSelection = await resolveCharacterSelection(tx, input);
         const backgroundId = await resolveBackgroundSelection(tx, input);
+        const musicTrackId = await resolveMusicTrackSelection(tx, input);
         const nextLayout = buildUpdatedLayoutNodes(storyNodes, id, input);
         const layoutById = new Map(nextLayout.map((node) => [node.id, node]));
         const timestamp = nowDate();
@@ -1268,6 +1457,7 @@ export async function updateNode(id: string, input: {
                         characterId: characterSelection.characterId,
                         characterSpriteId: characterSelection.characterSpriteId,
                         backgroundId,
+                        musicTrackId,
                         text: input.text.trim(),
                         audioUrl: input.audioUrl?.trim() || null,
                         isEndNode: Boolean(input.isEndNode),
@@ -1476,6 +1666,7 @@ export async function writeSeedData() {
         prisma.character.deleteMany(),
         prisma.playerScore.deleteMany(),
         prisma.story.deleteMany(),
+        prisma.musicTrack.deleteMany(),
         prisma.siteSettings.deleteMany(),
     ]);
 

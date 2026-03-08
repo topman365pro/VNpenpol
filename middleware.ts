@@ -3,15 +3,25 @@ import type { NextRequest } from 'next/server';
 
 function isProtectedRoute(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const isReadOnly = request.method === 'GET' || request.method === 'HEAD';
 
     if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
         return true;
+    }
+
+    if (isReadOnly && pathname === '/api/nodes') {
+        return false;
+    }
+
+    if (isReadOnly && /^\/api\/stories\/[^/]+$/.test(pathname)) {
+        return false;
     }
 
     return [
         '/api/stories',
         '/api/characters',
         '/api/backgrounds',
+        '/api/music-tracks',
         '/api/nodes',
         '/api/choices',
         '/api/assets',
@@ -77,6 +87,7 @@ export const config = {
         '/api/stories/:path*',
         '/api/characters/:path*',
         '/api/backgrounds/:path*',
+        '/api/music-tracks/:path*',
         '/api/nodes/:path*',
         '/api/choices/:path*',
         '/api/assets/:path*',

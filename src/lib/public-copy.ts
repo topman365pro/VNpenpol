@@ -44,6 +44,8 @@ export interface PublicCopy {
         submitted: string;
         playAnother: string;
         leaderboard: string;
+        bgmMute: string;
+        bgmUnmute: string;
         anonymousFallbackName: string;
         spriteAltFallback: string;
     };
@@ -107,6 +109,8 @@ const publicCopyByLocale: Record<PublicLocale, PublicCopy> = {
             submitted: 'Skor berhasil dikirim.',
             playAnother: 'Play Another Story',
             leaderboard: 'Leaderboard',
+            bgmMute: 'Matikan BGM',
+            bgmUnmute: 'Nyalakan BGM',
             anonymousFallbackName: 'Pemilih Anonim',
             spriteAltFallback: 'Sprite karakter',
         },
@@ -168,6 +172,8 @@ const publicCopyByLocale: Record<PublicLocale, PublicCopy> = {
             submitted: 'Score submitted.',
             playAnother: 'Play Another',
             leaderboard: 'Leaderboard',
+            bgmMute: 'Mute BGM',
+            bgmUnmute: 'Unmute BGM',
             anonymousFallbackName: 'Anonymous Voter',
             spriteAltFallback: 'Character sprite',
         },

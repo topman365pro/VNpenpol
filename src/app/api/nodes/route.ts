@@ -23,6 +23,7 @@ export async function POST(request: Request) {
             characterId: json.characterId || null,
             characterSpriteId: json.characterSpriteId || null,
             backgroundId: json.backgroundId || null,
+            musicTrackId: json.musicTrackId || null,
             editorDepth: typeof json.editorDepth === 'number' ? json.editorDepth : null,
             editorOrder: typeof json.editorOrder === 'number' ? json.editorOrder : null,
             text: json.text,

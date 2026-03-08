@@ -18,6 +18,7 @@ export async function POST(request: Request) {
         const story = await createStory({
             title: json.title,
             description: json.description,
+            defaultMusicTrackId: json.defaultMusicTrackId || null,
         });
         return NextResponse.json(story, { status: 201 });
     } catch {

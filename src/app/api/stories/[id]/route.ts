@@ -1,5 +1,20 @@
 import { NextResponse } from 'next/server';
-import { deleteStory, updateStory } from '@/lib/runtime-store';
+import { deleteStory, getStory, updateStory } from '@/lib/runtime-store';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const id = (await params).id;
+        const story = await getStory(id);
+        return NextResponse.json(story);
+    } catch {
+        return NextResponse.json({ error: 'Failed to fetch story' }, { status: 500 });
+    }
+}
 
 export async function PUT(
     request: Request,
@@ -11,6 +26,7 @@ export async function PUT(
         const story = await updateStory(id, {
             title: json.title,
             description: json.description,
+            defaultMusicTrackId: json.defaultMusicTrackId || null,
         });
         return NextResponse.json(story);
     } catch {

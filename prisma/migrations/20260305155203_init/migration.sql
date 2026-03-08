@@ -3,6 +3,7 @@ CREATE TABLE "Story" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
+    "defaultMusicTrackId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -45,6 +46,17 @@ CREATE TABLE "Background" (
 );
 
 -- CreateTable
+CREATE TABLE "MusicTrack" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "audioUrl" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "MusicTrack_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "SiteSettings" (
     "id" TEXT NOT NULL DEFAULT 'global',
     "publicLocale" TEXT NOT NULL DEFAULT 'id',
@@ -59,6 +71,7 @@ CREATE TABLE "Node" (
     "characterId" TEXT,
     "characterSpriteId" TEXT,
     "backgroundId" TEXT,
+    "musicTrackId" TEXT,
     "editorDepth" INTEGER NOT NULL DEFAULT 0,
     "editorOrder" INTEGER NOT NULL DEFAULT 0,
     "text" TEXT NOT NULL,
@@ -108,6 +121,12 @@ ALTER TABLE "Node" ADD CONSTRAINT "Node_characterSpriteId_fkey" FOREIGN KEY ("ch
 
 -- AddForeignKey
 ALTER TABLE "Node" ADD CONSTRAINT "Node_backgroundId_fkey" FOREIGN KEY ("backgroundId") REFERENCES "Background"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Story" ADD CONSTRAINT "Story_defaultMusicTrackId_fkey" FOREIGN KEY ("defaultMusicTrackId") REFERENCES "MusicTrack"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Node" ADD CONSTRAINT "Node_musicTrackId_fkey" FOREIGN KEY ("musicTrackId") REFERENCES "MusicTrack"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Choice" ADD CONSTRAINT "Choice_nodeId_fkey" FOREIGN KEY ("nodeId") REFERENCES "Node"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -4,6 +4,7 @@
       "id": "story-demo-merdeka",
       "title": "The Debate at Merdeka Hall",
       "description": "A short branching political drama about transit, public trust, and who pays for progress.",
+      "defaultMusicTrackId": "music-merdeka-theme",
       "createdAt": "2026-03-06T10:18:41.110Z",
       "updatedAt": "2026-03-06T10:18:41.110Z"
     }
@@ -130,6 +131,22 @@
       "updatedAt": "2026-03-06T10:18:41.110Z"
     }
   ],
+  "musicTracks": [
+    {
+      "id": "music-merdeka-theme",
+      "name": "Merdeka Theme",
+      "audioUrl": "/demo/merdeka-theme.wav",
+      "createdAt": "2026-03-06T10:18:41.110Z",
+      "updatedAt": "2026-03-06T10:18:41.110Z"
+    },
+    {
+      "id": "music-rally-shift",
+      "name": "Rally Shift",
+      "audioUrl": "/demo/rally-shift.wav",
+      "createdAt": "2026-03-06T10:18:41.110Z",
+      "updatedAt": "2026-03-06T10:18:41.110Z"
+    }
+  ],
   "nodes": [
     {
       "id": "node-opening",
@@ -137,6 +154,7 @@
       "characterId": null,
       "characterSpriteId": null,
       "backgroundId": "bg-merdeka-hall",
+      "musicTrackId": null,
       "editorDepth": 0,
       "editorOrder": 0,
       "text": "Rain presses against the glass roof of Merdeka Hall as students, journalists, and city workers fill the chamber. Tonight, your campaign will either earn trust or lose the room.",
@@ -152,6 +170,7 @@
       "characterId": "char-amira",
       "characterSpriteId": null,
       "backgroundId": "bg-debate-stage",
+      "musicTrackId": null,
       "editorDepth": 1,
       "editorOrder": 0,
       "text": "Amira straightens a stack of notes. \"We can cut commute times in half with an electric tram loop, but only if we protect the neighborhoods it passes through.\"",
@@ -167,6 +186,7 @@
       "characterId": "char-bima",
       "characterSpriteId": "char-bima-concerned",
       "backgroundId": "bg-debate-stage",
+      "musicTrackId": "music-rally-shift",
       "editorDepth": 1,
       "editorOrder": 1,
       "text": "Bima leans into the microphone. \"People want relief now. Freeze fares, pause the construction, and stop asking working families to gamble on a promise.\"",
@@ -182,6 +202,7 @@
       "characterId": "char-amira",
       "characterSpriteId": "char-amira-smile",
       "backgroundId": "bg-community-floor",
+      "musicTrackId": null,
       "editorDepth": 2,
       "editorOrder": 0,
       "text": "You back a neighborhood-first plan: phased construction, rent protections near stations, and a citizen oversight board. The crowd softens. Several union leaders begin taking notes.",
@@ -197,6 +218,7 @@
       "characterId": "9d9d046f-6bd6-4095-8266-5b27015fd613",
       "characterSpriteId": null,
       "backgroundId": "bg-community-floor",
+      "musicTrackId": "music-rally-shift",
       "editorDepth": 2,
       "editorOrder": 1,
       "text": "We must send 1 bilion dollar to israhel",
@@ -212,6 +234,7 @@
       "characterId": "char-amira",
       "characterSpriteId": "char-amira-determined",
       "backgroundId": "bg-night-closing",
+      "musicTrackId": "music-merdeka-theme",
       "editorDepth": 3,
       "editorOrder": 0,
       "text": "By midnight, the headline reads: \"Candidate Trades Speed for Trust, Wins the Room.\" The plan is slower, harder, and politically expensive, but people believe it belongs to them.",
@@ -227,6 +250,7 @@
       "characterId": "char-bima",
       "characterSpriteId": "char-bima-concerned",
       "backgroundId": "bg-night-closing",
+      "musicTrackId": "music-rally-shift",
       "editorDepth": 3,
       "editorOrder": 1,
       "text": "1 bilion dollars is sent to israhel",

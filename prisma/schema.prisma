@@ -11,12 +11,14 @@ datasource db {
 }
 
 model Story {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  nodes       Node[]
+  id                 String      @id @default(uuid())
+  title              String
+  description        String?
+  defaultMusicTrackId String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  defaultMusicTrack  MusicTrack? @relation("StoryDefaultMusicTrack", fields: [defaultMusicTrackId], references: [id], onDelete: SetNull)
+  nodes              Node[]
 }
 
 model Character {
@@ -51,6 +53,17 @@ model Background {
   nodes     Node[]
 }
 
+model MusicTrack {
+  id        String   @id @default(uuid())
+  name      String
+  audioUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stories   Story[]  @relation("StoryDefaultMusicTrack")
+  nodes     Node[]   @relation("NodeMusicTrack")
+}
+
 model SiteSettings {
   id           String @id @default("global")
   publicLocale String @default("id")
@@ -62,6 +75,7 @@ model Node {
   characterId        String?
   characterSpriteId  String?
   backgroundId       String?
+  musicTrackId       String?
   editorDepth        Int      @default(0)
   editorOrder        Int      @default(0)
   text               String
@@ -75,6 +89,7 @@ model Node {
   character          Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
   characterSprite    CharacterSprite? @relation(fields: [characterSpriteId], references: [id], onDelete: SetNull)
   background         Background? @relation(fields: [backgroundId], references: [id], onDelete: SetNull)
+  musicTrack         MusicTrack? @relation("NodeMusicTrack", fields: [musicTrackId], references: [id], onDelete: SetNull)
 
   choices            Choice[]   @relation("NodeChoices")
   incomingChoices    Choice[]   @relation("ChoiceTarget")

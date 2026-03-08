@@ -24,6 +24,7 @@ export default function AdminLayout({
                         <Link href="/admin/stories" style={{ fontWeight: 500 }}>Stories</Link>
                         <Link href="/admin/characters" style={{ fontWeight: 500 }}>Characters</Link>
                         <Link href="/admin/backgrounds" style={{ fontWeight: 500 }}>Backgrounds</Link>
+                        <Link href="/admin/music" style={{ fontWeight: 500 }}>Music</Link>
                         <Link href="/admin/leaderboard" style={{ fontWeight: 500 }}>Leaderboard</Link>
                         <Link href="/admin/assets" style={{ fontWeight: 500 }}>Assets</Link>
                         <Link href="/" style={{ color: 'var(--text-muted)' }}>Back to Site</Link>

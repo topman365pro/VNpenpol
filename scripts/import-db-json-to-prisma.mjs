@@ -17,6 +17,7 @@ async function main() {
   const characters = Array.isArray(db.characters) ? db.characters : [];
   const characterSprites = Array.isArray(db.characterSprites) ? db.characterSprites : [];
   const backgrounds = Array.isArray(db.backgrounds) ? db.backgrounds : [];
+  const musicTracks = Array.isArray(db.musicTracks) ? db.musicTracks : [];
   const nodes = Array.isArray(db.nodes) ? db.nodes : [];
   const choices = Array.isArray(db.choices) ? db.choices : [];
   const playerScores = Array.isArray(db.playerScores) ? db.playerScores : [];
@@ -27,10 +28,23 @@ async function main() {
     await tx.node.deleteMany();
     await tx.characterSprite.deleteMany();
     await tx.background.deleteMany();
+    await tx.story.deleteMany();
+    await tx.musicTrack.deleteMany();
     await tx.character.deleteMany();
     await tx.playerScore.deleteMany();
-    await tx.story.deleteMany();
     await tx.siteSettings.deleteMany();
+
+    if (musicTracks.length > 0) {
+      await tx.musicTrack.createMany({
+        data: musicTracks.map((track) => ({
+          id: track.id,
+          name: track.name,
+          audioUrl: track.audioUrl,
+          createdAt: asDate(track.createdAt),
+          updatedAt: asDate(track.updatedAt),
+        })),
+      });
+    }
 
     if (stories.length > 0) {
       await tx.story.createMany({
@@ -38,6 +52,7 @@ async function main() {
           id: story.id,
           title: story.title,
           description: story.description ?? null,
+          defaultMusicTrackId: story.defaultMusicTrackId ?? null,
           createdAt: asDate(story.createdAt),
           updatedAt: asDate(story.updatedAt),
         })),
@@ -97,6 +112,7 @@ async function main() {
           characterId: node.characterId ?? null,
           characterSpriteId: node.characterSpriteId ?? null,
           backgroundId: node.backgroundId ?? null,
+          musicTrackId: node.musicTrackId ?? null,
           editorDepth: Number(node.editorDepth ?? 0),
           editorOrder: Number(node.editorOrder ?? 0),
           text: node.text,
@@ -143,6 +159,7 @@ async function main() {
           characters: characters.length,
           characterSprites: characterSprites.length,
           backgrounds: backgrounds.length,
+          musicTracks: musicTracks.length,
           nodes: nodes.length,
           choices: choices.length,
           playerScores: playerScores.length,
