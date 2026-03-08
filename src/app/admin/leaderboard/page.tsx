@@ -30,7 +30,7 @@ export default function LeaderboardAdminPage() {
 
     async function fetchEntries(preferredEntryId?: string | null) {
         setLoading(true);
-        const response = await fetch('/api/leaderboard');
+        const response = await fetch('/api/admin/leaderboard');
         if (response.ok) {
             const data: LeaderboardEntry[] = await response.json();
             setEntries(data);
@@ -72,7 +72,7 @@ export default function LeaderboardAdminPage() {
         }
 
         setSaving(true);
-        const response = await fetch(editingId ? `/api/leaderboard/${editingId}` : '/api/leaderboard', {
+        const response = await fetch(editingId ? `/api/admin/leaderboard/${editingId}` : '/api/admin/leaderboard', {
             method: editingId ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -98,7 +98,7 @@ export default function LeaderboardAdminPage() {
             return;
         }
 
-        const response = await fetch(`/api/leaderboard/${entry.id}`, {
+        const response = await fetch(`/api/admin/leaderboard/${entry.id}`, {
             method: 'DELETE',
         });
 

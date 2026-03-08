@@ -1,6 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { getSiteSettings } from '@/lib/data-store';
+import { getSiteSettings } from '@/lib/runtime-store';
 import { getPublicCopy } from '@/lib/public-copy';
 
 export const dynamic = 'force-dynamic';

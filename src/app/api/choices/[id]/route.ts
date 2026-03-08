@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteChoice, updateChoice } from '@/lib/data-store';
+import { deleteChoice, updateChoice } from '@/lib/runtime-store';
 
 export async function PUT(
     request: Request,

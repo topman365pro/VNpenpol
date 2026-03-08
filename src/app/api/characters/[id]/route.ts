@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteCharacter, updateCharacter } from '@/lib/data-store';
+import { deleteCharacter, updateCharacter } from '@/lib/runtime-store';
 
 export async function PUT(
     request: Request,

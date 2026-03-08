@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createNode, listNodes } from '@/lib/data-store';
+import { createNode, listNodes } from '@/lib/runtime-store';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getSiteSettings, listLeaderboard } from '@/lib/data-store';
+import { getSiteSettings, listLeaderboard } from '@/lib/runtime-store';
 import { formatPublicDate, getPublicCopy } from '@/lib/public-copy';
 
 interface ScoreEntry {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createCharacter, listCharacters } from '@/lib/data-store';
+import { createCharacter, listCharacters } from '@/lib/runtime-store';
 
 export const dynamic = 'force-dynamic';
 

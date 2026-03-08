@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getSiteSettings, listStories } from '@/lib/data-store';
+import { getSiteSettings, listStories } from '@/lib/runtime-store';
 import { getPublicCopy } from '@/lib/public-copy';
 
 interface Story {

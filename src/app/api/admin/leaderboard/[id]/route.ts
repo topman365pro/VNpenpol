@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteBackground, updateBackground } from '@/lib/runtime-store';
+import { deletePlayerScore, updatePlayerScore } from '@/lib/runtime-store';
 
 export async function PUT(
     request: Request,
@@ -8,13 +8,13 @@ export async function PUT(
     try {
         const id = (await params).id;
         const json = await request.json();
-        const background = await updateBackground(id, {
+        const score = await updatePlayerScore(id, {
             name: json.name,
-            imageUrl: json.imageUrl,
+            score: json.score,
         });
-        return NextResponse.json(background);
+        return NextResponse.json(score);
     } catch {
-        return NextResponse.json({ error: 'Failed to update background' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update leaderboard entry' }, { status: 500 });
     }
 }
 
@@ -24,9 +24,9 @@ export async function DELETE(
 ) {
     try {
         const id = (await params).id;
-        await deleteBackground(id);
+        await deletePlayerScore(id);
         return NextResponse.json({ success: true });
     } catch {
-        return NextResponse.json({ error: 'Failed to delete background' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to delete leaderboard entry' }, { status: 500 });
     }
 }

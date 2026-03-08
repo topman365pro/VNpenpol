@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deletePlayerScore, updatePlayerScore } from '@/lib/data-store';
+import { deletePlayerScore, updatePlayerScore } from '@/lib/runtime-store';
 
 export const dynamic = 'force-dynamic';
 

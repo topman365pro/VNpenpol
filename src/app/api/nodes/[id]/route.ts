@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { deleteNode, updateNode, updateNodeLayout } from '@/lib/data-store';
+import { deleteNode, updateNode, updateNodeLayout } from '@/lib/runtime-store';
 
 export async function PUT(
     request: Request,

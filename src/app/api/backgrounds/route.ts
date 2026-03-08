@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createBackground, listBackgrounds } from '@/lib/data-store';
+import { createBackground, listBackgrounds } from '@/lib/runtime-store';
 
 export const dynamic = 'force-dynamic';
 

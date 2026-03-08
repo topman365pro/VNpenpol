@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createChoice } from '@/lib/data-store';
+import { createChoice } from '@/lib/runtime-store';
 
 export const dynamic = 'force-dynamic';
 

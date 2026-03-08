@@ -1,4 +1,4 @@
-import { getSiteSettings } from '@/lib/data-store';
+import { getSiteSettings } from '@/lib/runtime-store';
 import { getPublicCopy } from '@/lib/public-copy';
 import GamePageClient from '@/components/public/GamePageClient';
 
