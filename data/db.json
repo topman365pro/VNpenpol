@@ -20,6 +20,12 @@
       "name": "Bima Hartono",
       "createdAt": "2026-03-06T10:18:41.110Z",
       "updatedAt": "2026-03-06T10:18:41.110Z"
+    },
+    {
+      "id": "9d9d046f-6bd6-4095-8266-5b27015fd613",
+      "name": "Saul Rudiman",
+      "createdAt": "2026-03-06T11:50:45.282Z",
+      "updatedAt": "2026-03-06T11:50:45.282Z"
     }
   ],
   "characterSprites": [
@@ -42,6 +48,16 @@
       "sortOrder": 0,
       "createdAt": "2026-03-06T10:18:41.110Z",
       "updatedAt": "2026-03-06T10:18:41.110Z"
+    },
+    {
+      "id": "85de11a8-d137-4f75-8465-1806540867a1",
+      "characterId": "9d9d046f-6bd6-4095-8266-5b27015fd613",
+      "label": "Default",
+      "imageUrl": "/uploads/1772783755693_418sBmnGXCL_Background_Removed.png",
+      "isDefault": true,
+      "sortOrder": 0,
+      "createdAt": "2026-03-06T11:50:45.282Z",
+      "updatedAt": "2026-03-06T11:50:45.282Z"
     },
     {
       "id": "char-bima-concerned",
@@ -178,17 +194,17 @@
     {
       "id": "node-populist-route",
       "storyId": "story-demo-merdeka",
-      "characterId": "char-bima",
-      "characterSpriteId": "char-bima-rally",
+      "characterId": "9d9d046f-6bd6-4095-8266-5b27015fd613",
+      "characterSpriteId": null,
       "backgroundId": "bg-community-floor",
       "editorDepth": 2,
       "editorOrder": 1,
-      "text": "You endorse a fare freeze with no replacement funding. The applause is loud, but a transport analyst in the front row whispers that the buses will start failing within months.",
+      "text": "We must send 1 bilion dollar to israhel",
       "audioUrl": null,
       "isStartNode": false,
       "isEndNode": false,
       "createdAt": "2026-03-06T10:18:41.110Z",
-      "updatedAt": "2026-03-06T10:18:41.110Z"
+      "updatedAt": "2026-03-06T11:56:11.504Z"
     },
     {
       "id": "node-reform-ending",
@@ -213,12 +229,12 @@
       "backgroundId": "bg-night-closing",
       "editorDepth": 3,
       "editorOrder": 1,
-      "text": "Three weeks later the temporary fare freeze collapses under debt pressure. Your rally clips still trend online, but riders are angrier than before and trust is harder to rebuild.",
+      "text": "1 bilion dollars is sent to israhel",
       "audioUrl": null,
       "isStartNode": false,
       "isEndNode": true,
       "createdAt": "2026-03-06T10:18:41.110Z",
-      "updatedAt": "2026-03-06T10:18:41.110Z"
+      "updatedAt": "2026-03-06T11:50:23.509Z"
     }
   ],
   "choices": [
@@ -289,13 +305,32 @@
       "id": "choice-populist-1",
       "nodeId": "node-populist-route",
       "targetNodeId": "node-collapse-ending",
-      "text": "Run with the slogan and hope the numbers work later.",
+      "text": "Send 1 bilion dollar to israhel",
       "scoreImpact": -2,
       "createdAt": "2026-03-06T10:18:41.110Z",
-      "updatedAt": "2026-03-06T10:18:41.110Z"
+      "updatedAt": "2026-03-06T11:51:17.052Z"
     }
   ],
-  "playerScores": [],
+  "playerScores": [
+    {
+      "id": "d5e8ba50-3f77-409e-bc31-9803f49c6e7c",
+      "name": "Playtest 1",
+      "score": 4,
+      "createdAt": "2026-03-06T11:57:35.855Z"
+    },
+    {
+      "id": "73ca1e48-f7e5-4e9d-ac41-6883e1104e5e",
+      "name": "Playtest 2",
+      "score": -5,
+      "createdAt": "2026-03-06T11:57:54.001Z"
+    },
+    {
+      "id": "a16c3029-106c-4091-b12d-bde5f895a42e",
+      "name": "Playtest 3",
+      "score": 6,
+      "createdAt": "2026-03-06T11:58:14.207Z"
+    }
+  ],
   "siteSettings": {
     "publicLocale": "id"
   }
