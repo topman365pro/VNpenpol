@@ -78,7 +78,7 @@ export default async function HomePage() {
                     </p>
                 </Link>
 
-                <Link href="/admin" className="glass-panel" style={{
+                <Link href="/admin" prefetch={false} className="glass-panel" style={{
                     padding: '2.5rem 2rem', display: 'flex', flexDirection: 'column', alignItems: 'center',
                     textAlign: 'center', textDecoration: 'none', border: '1px solid rgba(245,158,11,0.3)',
                 }}>
