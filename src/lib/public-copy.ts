@@ -37,6 +37,7 @@ export interface PublicCopy {
         scoreLabel: string;
         exit: string;
         tapToSkip: string;
+        tapToContinue: string;
         completeTitle: string;
         finalScoreLabel: string;
         namePlaceholder: string;
@@ -102,6 +103,7 @@ const publicCopyByLocale: Record<PublicLocale, PublicCopy> = {
             scoreLabel: 'Skor',
             exit: '← Keluar',
             tapToSkip: 'Ketuk atau klik untuk melewati animasi teks',
+            tapToContinue: 'Ketuk atau klik untuk lanjut',
             completeTitle: 'Cerita Selesai',
             finalScoreLabel: 'Skor Politikmu',
             namePlaceholder: 'Masukkan namamu...',
@@ -165,6 +167,7 @@ const publicCopyByLocale: Record<PublicLocale, PublicCopy> = {
             scoreLabel: 'Score',
             exit: '← Exit',
             tapToSkip: 'Tap or click to skip',
+            tapToContinue: 'Tap or click to continue',
             completeTitle: 'Story Complete',
             finalScoreLabel: 'Your Political Score',
             namePlaceholder: 'Enter your name...',

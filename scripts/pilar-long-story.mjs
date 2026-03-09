@@ -24,6 +24,9 @@ function choice(timestamp, record) {
 }
 
 const STORY_ID = 'story-pilar-tiga-jam-balana';
+const MIN_CHUNK_WORDS = 80;
+const MAX_CHUNK_WORDS = 120;
+const MAX_MERGED_CHUNK_WORDS = 120;
 
 const FLAVOR_TEXT = {
   intro: `Tidak ada orang di ruangan itu yang benar-benar berbicara tentang angka semata. Yang dipertaruhkan oleh tiga jam terakhir ini adalah apakah kampanye Nadira akan tetap memakai politik sebagai cara menjelaskan kenyataan, atau menyerah menjadikannya sekadar alat untuk menaklukkan malam. Dari awal sudah terasa bahwa setiap keputusan kecil malam ini akan hidup lebih lama daripada durasi siarannya sendiri.`,
@@ -74,8 +77,195 @@ function storyNode(timestamp, record) {
   return node(timestamp, withFlavor({ storyId: STORY_ID, ...record }));
 }
 
-export function buildPilarLongStoryData(timestamp) {
+function countWords(text) {
+  return String(text).trim().split(/\s+/).filter(Boolean).length;
+}
+
+function sentenceSplit(text) {
+  const matches = text.match(/[^.!?]+(?:[.!?]+["']?)?|[^.!?]+$/g);
+  return (matches ?? [text]).map((part) => part.trim()).filter(Boolean);
+}
+
+function splitSentenceFallback(text, maxWords) {
+  const words = String(text).trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) {
+    return [text.trim()];
+  }
+
+  const chunks = [];
+  for (let index = 0; index < words.length; index += maxWords) {
+    chunks.push(words.slice(index, index + maxWords).join(' '));
+  }
+  return chunks;
+}
+
+function expandUnit(text, maxWords) {
+  if (countWords(text) <= maxWords) {
+    return [text.trim()];
+  }
+
+  const sentences = sentenceSplit(text);
+  if (sentences.length === 1) {
+    return splitSentenceFallback(text, maxWords);
+  }
+
+  const units = [];
+  let current = [];
+  let currentWords = 0;
+
+  for (const sentence of sentences) {
+    const sentenceWords = countWords(sentence);
+    if (sentenceWords > maxWords) {
+      if (current.length > 0) {
+        units.push(current.join(' ').trim());
+        current = [];
+        currentWords = 0;
+      }
+      units.push(...splitSentenceFallback(sentence, maxWords));
+      continue;
+    }
+
+    if (currentWords > 0 && currentWords + sentenceWords > maxWords) {
+      units.push(current.join(' ').trim());
+      current = [sentence];
+      currentWords = sentenceWords;
+      continue;
+    }
+
+    current.push(sentence);
+    currentWords += sentenceWords;
+  }
+
+  if (current.length > 0) {
+    units.push(current.join(' ').trim());
+  }
+
+  return units;
+}
+
+function chunkText(text, minWords = MIN_CHUNK_WORDS, maxWords = MAX_CHUNK_WORDS) {
+  const paragraphs = String(text)
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  const units = paragraphs.flatMap((paragraph) => expandUnit(paragraph, maxWords));
+  const chunkUnits = [];
+  let current = [];
+  let currentWords = 0;
+
+  for (const unit of units) {
+    const unitWords = countWords(unit);
+    if (currentWords === 0) {
+      current.push(unit);
+      currentWords = unitWords;
+      continue;
+    }
+
+    if (currentWords + unitWords <= maxWords || (currentWords < minWords && currentWords + unitWords <= MAX_MERGED_CHUNK_WORDS)) {
+      current.push(unit);
+      currentWords += unitWords;
+      continue;
+    }
+
+    chunkUnits.push([...current]);
+    current = [unit];
+    currentWords = unitWords;
+  }
+
+  if (current.length > 0) {
+    chunkUnits.push([...current]);
+  }
+
+  if (chunkUnits.length > 1) {
+    const lastChunkUnits = chunkUnits[chunkUnits.length - 1];
+    const previousChunkUnits = chunkUnits[chunkUnits.length - 2];
+
+    while (
+      countWords(lastChunkUnits.join('\n\n')) < minWords
+      && previousChunkUnits.length > 1
+    ) {
+      const previousWithoutCandidateWords = countWords(previousChunkUnits.slice(0, -1).join('\n\n'));
+      if (previousWithoutCandidateWords < minWords - 10) {
+        break;
+      }
+
+      lastChunkUnits.unshift(previousChunkUnits.pop());
+    }
+
+    const lastChunk = lastChunkUnits.join('\n\n').trim();
+    const previousChunk = previousChunkUnits.join('\n\n').trim();
+    if (countWords(lastChunk) < minWords && countWords(previousChunk) + countWords(lastChunk) <= MAX_MERGED_CHUNK_WORDS) {
+      chunkUnits.splice(chunkUnits.length - 2, 2, [...previousChunkUnits, ...lastChunkUnits]);
+    }
+  }
+
+  return chunkUnits.map((units) => units.join('\n\n').trim()).filter(Boolean);
+}
+
+function chunkedNodeId(baseId, index) {
+  return index === 0 ? baseId : `${baseId}__${index + 1}`;
+}
+
+function expandStoryIntoContinuationNodes(timestamp, storyData) {
+  const finalNodeIds = new Map();
+  const nodes = [];
+  const continuationChoices = [];
+
+  for (const originalNode of storyData.nodes) {
+    const chunks = chunkText(originalNode.text);
+    if (chunks.length === 1) {
+      nodes.push(originalNode);
+      finalNodeIds.set(originalNode.id, originalNode.id);
+      continue;
+    }
+
+    const orderBase = Number(originalNode.editorOrder ?? 0) * 10;
+    for (let index = 0; index < chunks.length; index += 1) {
+      const id = chunkedNodeId(originalNode.id, index);
+      const isFinalChunk = index === chunks.length - 1;
+      nodes.push({
+        ...originalNode,
+        id,
+        text: chunks[index],
+        isStartNode: index === 0 ? originalNode.isStartNode : false,
+        isEndNode: isFinalChunk ? originalNode.isEndNode : false,
+        editorOrder: orderBase + index,
+      });
+
+      if (!isFinalChunk) {
+        continuationChoices.push(
+          choice(timestamp, {
+            id: `${originalNode.id}__continue_${index + 1}`,
+            nodeId: id,
+            targetNodeId: chunkedNodeId(originalNode.id, index + 1),
+            text: 'Lanjut',
+            scoreImpact: 0,
+          }),
+        );
+      }
+    }
+
+    finalNodeIds.set(originalNode.id, chunkedNodeId(originalNode.id, chunks.length - 1));
+  }
+
+  const choices = [
+    ...continuationChoices,
+    ...storyData.choices.map((originalChoice) => ({
+      ...originalChoice,
+      nodeId: finalNodeIds.get(originalChoice.nodeId) ?? originalChoice.nodeId,
+    })),
+  ];
+
   return {
+    ...storyData,
+    nodes,
+    choices,
+  };
+}
+
+export function buildPilarLongStoryData(timestamp) {
+  const storyData = {
     stories: [
       withTimestamps(timestamp, {
         id: STORY_ID,
@@ -958,4 +1148,6 @@ Balana tetap menunggu pemimpin. Malam kami hanya gagal memastikan siapa sebenarn
       choice(timestamp, { id: 'pilar-tiga-jam-choice-14c-pop', nodeId: 'pilar-tiga-jam-node-14c', targetNodeId: 'pilar-tiga-jam-ending-populis', text: 'Dorong satu ledakan terakhir yang paling nyaring dan paling mudah viral.', scoreImpact: -4 }),
     ],
   };
+
+  return expandStoryIntoContinuationNodes(timestamp, storyData);
 }

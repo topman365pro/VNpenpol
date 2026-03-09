@@ -72,6 +72,12 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const bgmAudioRef = useRef<HTMLAudioElement | null>(null);
     const typeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isContinuationNode = Boolean(
+        currentNode
+        && !currentNode.isEndNode
+        && currentNode.choices.length === 1
+        && currentNode.choices[0]?.targetNodeId,
+    );
 
     const beginTyping = useEffectEvent((text: string) => {
         setDisplayedText('');
@@ -228,6 +234,17 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
         }
 
         setForcedGameOver(true);
+    }
+
+    function handleAdvanceInteraction() {
+        if (isTyping) {
+            skipTyping();
+            return;
+        }
+
+        if (currentNode && isContinuationNode) {
+            handleChoice(currentNode.choices[0]);
+        }
     }
 
     function toggleBgmMute() {
@@ -421,7 +438,11 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
             </Link>
 
             <section className="vn-stage-shell">
-                <div className="vn-stage">
+                <div
+                    className="vn-stage"
+                    onClick={handleAdvanceInteraction}
+                    style={{ cursor: isTyping || isContinuationNode ? 'pointer' : 'default' }}
+                >
                     {currentNode.spriteImageUrl && (
                         <div key={`${currentNode.id}:${currentNode.spriteImageUrl}`} className="vn-stage-figure animate-fadeIn">
                             <img
@@ -435,7 +456,11 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
             </section>
 
             <div className="vn-dialogue-shell">
-                <div className="vn-dialogue-box" onClick={skipTyping}>
+                <div
+                    className="vn-dialogue-box"
+                    onClick={handleAdvanceInteraction}
+                    style={{ cursor: isTyping || isContinuationNode ? 'pointer' : 'default' }}
+                >
                     {currentNode.character && (
                         <div className="vn-speaker-name">{currentNode.character.name}</div>
                     )}
@@ -451,7 +476,13 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
                         </p>
                     )}
 
-                    {!isTyping && currentNode.choices.length > 0 && (
+                    {!isTyping && isContinuationNode && (
+                        <p style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+                            {copy.tapToContinue}
+                        </p>
+                    )}
+
+                    {!isTyping && !isContinuationNode && currentNode.choices.length > 0 && (
                         <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {currentNode.choices.map((choice, index) => (
                                 <button
