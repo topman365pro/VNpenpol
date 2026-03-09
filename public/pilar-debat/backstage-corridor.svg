@@ -1,0 +1,19 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#08121D"/>
+  <rect width="1920" height="1080" fill="url(#g)"/>
+  <rect x="290" y="120" width="1340" height="840" rx="36" fill="#0C1E2E"/>
+  <path d="M430 240H1490V820H430V240Z" fill="#10273D"/>
+  <path d="M620 240V820" stroke="#173750" stroke-width="18"/>
+  <path d="M960 240V820" stroke="#173750" stroke-width="18"/>
+  <path d="M1300 240V820" stroke="#173750" stroke-width="18"/>
+  <rect x="510" y="350" width="120" height="270" rx="14" fill="#1D4564"/>
+  <rect x="850" y="350" width="120" height="270" rx="14" fill="#1D4564"/>
+  <rect x="1190" y="350" width="120" height="270" rx="14" fill="#1D4564"/>
+  <rect x="0" y="920" width="1920" height="160" fill="#04080E"/>
+  <defs>
+    <linearGradient id="g" x1="960" y1="120" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102438"/>
+      <stop offset="1" stop-color="#050B12"/>
+    </linearGradient>
+  </defs>
+</svg>

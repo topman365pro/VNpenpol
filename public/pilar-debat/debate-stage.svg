@@ -1,0 +1,20 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1920" height="1080" fill="#06101B"/>
+  <rect width="1920" height="1080" fill="url(#g)"/>
+  <ellipse cx="960" cy="220" rx="580" ry="190" fill="#14304A" opacity="0.6"/>
+  <rect x="340" y="300" width="1240" height="420" rx="40" fill="#0B1F31"/>
+  <rect x="440" y="390" width="300" height="210" rx="24" fill="#183754"/>
+  <rect x="810" y="350" width="300" height="250" rx="24" fill="#1A3A57"/>
+  <rect x="1180" y="390" width="300" height="210" rx="24" fill="#183754"/>
+  <path d="M0 850H1920V1080H0V850Z" fill="#050B12"/>
+  <path d="M320 850L550 630H1370L1600 850H320Z" fill="#0E2235"/>
+  <circle cx="540" cy="190" r="26" fill="#F5C542" opacity="0.85"/>
+  <circle cx="960" cy="150" r="34" fill="#62E7FF" opacity="0.75"/>
+  <circle cx="1380" cy="190" r="26" fill="#F58DA8" opacity="0.8"/>
+  <defs>
+    <linearGradient id="g" x1="960" y1="80" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10263C"/>
+      <stop offset="1" stop-color="#03070E"/>
+    </linearGradient>
+  </defs>
+</svg>
