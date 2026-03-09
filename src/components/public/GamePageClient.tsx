@@ -391,9 +391,11 @@ export default function GamePageClient({ storyId, locale, copy }: GamePageClient
                         type="button"
                         className="btn btn-secondary"
                         onClick={toggleBgmMute}
-                        style={{ padding: '0.35rem 0.7rem', fontSize: '0.78rem' }}
+                        aria-label={isBgmMuted ? copy.bgmUnmute : copy.bgmMute}
+                        title={isBgmMuted ? copy.bgmUnmute : copy.bgmMute}
+                        style={{ padding: '0.35rem 0.65rem', fontSize: '0.95rem', lineHeight: 1 }}
                     >
-                        {isBgmMuted ? copy.bgmUnmute : copy.bgmMute}
+                        {isBgmMuted ? '🔇' : '🔊'}
                     </button>
                 )}
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{copy.scoreLabel}:</span>
