@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed:demo": "node scripts/seed-demo.mjs",
     "import:story:pilar": "node scripts/import-pilar-debat-to-prisma.mjs",
+    "import:story:pilar-long": "node scripts/import-pilar-long-to-prisma.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

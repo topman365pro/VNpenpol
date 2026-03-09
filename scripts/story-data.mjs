@@ -1,3 +1,5 @@
+import { buildPilarLongStoryData } from './pilar-long-story.mjs';
+
 function withTimestamps(timestamp, record) {
   return {
     ...record,
@@ -681,15 +683,16 @@ export function buildPilarDebatStoryData(timestamp) {
 export function buildSeedDatabase(timestamp) {
   const demo = buildDemoStoryData(timestamp);
   const pilarDebat = buildPilarDebatStoryData(timestamp);
+  const pilarLong = buildPilarLongStoryData(timestamp);
 
   return {
-    stories: [...demo.stories, ...pilarDebat.stories],
+    stories: [...demo.stories, ...pilarDebat.stories, ...pilarLong.stories],
     characters: [...demo.characters, ...pilarDebat.characters],
     characterSprites: [...demo.characterSprites, ...pilarDebat.characterSprites],
     backgrounds: [...demo.backgrounds, ...pilarDebat.backgrounds],
     musicTracks: [...demo.musicTracks, ...pilarDebat.musicTracks],
-    nodes: [...demo.nodes, ...pilarDebat.nodes],
-    choices: [...demo.choices, ...pilarDebat.choices],
+    nodes: [...demo.nodes, ...pilarDebat.nodes, ...pilarLong.nodes],
+    choices: [...demo.choices, ...pilarDebat.choices, ...pilarLong.choices],
     playerScores: [
       score(timestamp, { id: 'd5e8ba50-3f77-409e-bc31-9803f49c6e7c', name: 'Playtest 1', score: 4 }),
       score(timestamp, { id: '73ca1e48-f7e5-4e9d-ac41-6883e1104e5e', name: 'Playtest 2', score: -5 }),
