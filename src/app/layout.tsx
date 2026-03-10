@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { getSiteSettings } from '@/lib/runtime-store';
 import { getPublicCopy } from '@/lib/public-copy';
+import { Analytics } from '@vercel/analytics/next';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,10 @@ export default async function RootLayout({
 
     return (
         <html lang={publicLocale}>
-            <body>{children}</body>
+            <body>
+                {children}
+                <Analytics />
+            </body>
         </html>
     );
 }
